@@ -116,12 +116,12 @@ typedef struct
 	unsigned short analogInputCh3;
 	//---struktura s datami ktore sa nam tam objavia iba na poziadanie
 	TExtraRequestData extraInfo;
-    double distanceLeft;
-    double distanceRight;
+    double pEncL;
+    double pEncR;
     double startEncL;
     double startEncR;
-    unsigned short int encOverFlowL;
-    unsigned short int encOverFlowR;
+    double tmpPencL;
+    double tmpPencR;
 
 }TKobukiData;
 

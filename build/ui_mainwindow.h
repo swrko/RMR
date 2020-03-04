@@ -68,7 +68,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(850, 629);
+        MainWindow->resize(850, 824);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         gridLayout = new QGridLayout(centralWidget);
@@ -306,8 +306,8 @@ public:
         label_2->setText(QApplication::translate("MainWindow", "Y:", 0, QApplication::UnicodeUTF8));
         label_4->setText(QApplication::translate("MainWindow", "encoder L", 0, QApplication::UnicodeUTF8));
         label_5->setText(QApplication::translate("MainWindow", "encoder R", 0, QApplication::UnicodeUTF8));
-        label_6->setText(QApplication::translate("MainWindow", "encoL", 0, QApplication::UnicodeUTF8));
-        label_7->setText(QApplication::translate("MainWindow", "encoR", 0, QApplication::UnicodeUTF8));
+        label_6->setText(QApplication::translate("MainWindow", "startL", 0, QApplication::UnicodeUTF8));
+        label_7->setText(QApplication::translate("MainWindow", "startR", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

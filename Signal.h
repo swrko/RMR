@@ -11,10 +11,12 @@ public:
     ~Signal(){};
  //   Signal(const Signal &){};
 
+    double startR;
+    double startL;
     double encL;
     double encR;
-    double robotX;
-    double robotY;
+    double pEncL;
+    double pEncR;
     double robotFi;
 
 };

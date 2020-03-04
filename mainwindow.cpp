@@ -84,15 +84,27 @@ void MainWindow::processThisRobot()
     //ui->lineEdit_4->setText(QString::number(robotdata.GyroAngle));
         /// lepsi pristup je nastavit len nejaku premennu, a poslat signal oknu na prekreslenie
         /// okno pocuva vo svojom slote a vasu premennu nastavi tak ako chcete
-        robotdata.distanceLeft = robotdata.EncoderLeft * robot.getTick();
-        robotdata.distanceRight = robotdata.EncoderRight * robot.getTick();
+
+    if (robotdata.EncoderLeft == robotdata.tmpPencL && robotdata.EncoderRight == robotdata.tmpPencR){
+
+    }else{
+        robotdata.pEncL = robotdata.tmpPencL;
+        robotdata.pEncR = robotdata.tmpPencR;
+    }
+
+    if ((robotdata.pEncL - (double)60000) > robotdata.EncoderLeft && robotdata.pEncL > robotdata.EncoderLeft ){
+
+    }
+    if ((robotdata.pEncR - (double)60000) > robotdata.EncoderRight && robotdata.pEncR > robotdata.EncoderRight){
+
+    }
+        mysig.pEncL = robotdata.pEncL;
+        mysig.pEncR = robotdata.pEncR;
         mysig.encL = robotdata.EncoderLeft;
         mysig.encR = robotdata.EncoderRight;
-        mysig.robotX = robotdata.distanceLeft;
-        mysig.robotY = robotdata.distanceRight;
         mysig.robotFi = 100;
         emit uiValuesChanged(mysig);
-        ///toto neodporucam na nejake komplikovane struktury. robit to kopiu dat. radsej vtedy posielajte
+        /// toto neodporucam na nejake komplikovane struktury. robit to kopiu dat. radsej vtedy posielajte
         /// prazdny signal a slot bude vykreslovat strukturu (vtedy ju musite mat samozrejme ako member premmennu v mainwindow.ak u niekoho najdem globalnu premennu,tak bude cistit bludisko zubnou kefkou.. kefku dodam)
         /// vtedy ale odporucam pouzit mutex, aby sa vam nestalo ze budete pocas vypisovania prepisovat niekde inde
 
@@ -117,13 +129,13 @@ void MainWindow::processThisLidar(LaserMeasurement &laserData)
 
 void  MainWindow::setUiValues(Signal sig)
 {
-     ui->lineEdit_2->setText(QString::number(sig.robotX));
-     ui->lineEdit_3->setText(QString::number(sig.robotY));
+     ui->lineEdit_2->setText(QString::number(sig.pEncL));
+     ui->lineEdit_3->setText(QString::number(sig.pEncR));
      ui->lineEdit_4->setText(QString::number(sig.robotFi));
      ui->lineEdit_5->setText(QString::number(sig.encL));
      ui->lineEdit_6->setText(QString::number(sig.encR));
-     ui->lineEdit_7->setText(QString::number(50));
-     ui->lineEdit_8->setText(QString::number(100));
+     ui->lineEdit_7->setText(QString::number(sig.startL));
+     ui->lineEdit_8->setText(QString::number(sig.startR));
 
 }
 
@@ -135,6 +147,11 @@ void MainWindow::on_pushButton_9_clicked() //start button
       robotthreadID=pthread_create(&robotthreadHandle,NULL,&robotUDPVlakno,(void *)this);
 ///toto je prepojenie signalu o zmene udajov, na signal
       connect(this,SIGNAL(uiValuesChanged(Signal)),this,SLOT(setUiValues(Signal)));
+       sleep(2);
+      mysig.startL = robotdata.EncoderLeft;
+      mysig.startR = robotdata.EncoderRight;
+      robotdata.pEncL = robotdata.EncoderLeft;
+      robotdata.pEncR = robotdata.EncoderRight;
 }
 
 void MainWindow::on_pushButton_2_clicked() //forward
@@ -299,7 +316,13 @@ void MainWindow::robotprocess()
   //      struct timespec t;
   //      clock_gettime(CLOCK_REALTIME,&t);
 
+        //zapamatanie predoslej hodnoty
+        robotdata.tmpPencL = robotdata.EncoderLeft;
+        robotdata.tmpPencR = robotdata.EncoderRight;
+
         int returnval=robot.fillData(robotdata,(unsigned char*)buff);
+
+
         if(returnval==0)
         {
             processThisRobot();
