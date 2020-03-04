@@ -30,32 +30,29 @@ static const uint qt_meta_data_MainWindow[] = {
        1,       // signalCount
 
  // signals: signature, parameters, type, tag, flags
-      67,   12,   11,   11, 0x05,
+      19,   12,   11,   11, 0x05,
 
  // slots: signature, parameters, type, tag, flags
-     119,   11,   11,   11, 0x08,
-     145,   11,   11,   11, 0x08,
-     171,   11,   11,   11, 0x08,
-     197,   11,   11,   11, 0x08,
-     223,   11,   11,   11, 0x08,
-     249,   11,   11,   11, 0x08,
-     307,  275,   11,   11, 0x0a,
+      43,   11,   11,   11, 0x08,
+      69,   11,   11,   11, 0x08,
+      95,   11,   11,   11, 0x08,
+     121,   11,   11,   11, 0x08,
+     147,   11,   11,   11, 0x08,
+     173,   11,   11,   11, 0x08,
+     203,  199,   11,   11, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_MainWindow[] = {
-    "MainWindow\0\0"
-    "newEncoderL,newEncoderR,newrobotX,newrobotY,newrobotFi\0"
-    "uiValuesChanged(double,double,double,double,double)\0"
+    "MainWindow\0\0newsig\0uiValuesChanged(Signal)\0"
     "on_pushButton_9_clicked()\0"
     "on_pushButton_2_clicked()\0"
     "on_pushButton_3_clicked()\0"
     "on_pushButton_6_clicked()\0"
     "on_pushButton_5_clicked()\0"
-    "on_pushButton_4_clicked()\0"
-    "encL,encR,robotX,robotY,robotFi\0"
-    "setUiValues(double,double,double,double,double)\0"
+    "on_pushButton_4_clicked()\0sig\0"
+    "setUiValues(Signal)\0"
 };
 
 void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -64,14 +61,14 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         Q_ASSERT(staticMetaObject.cast(_o));
         MainWindow *_t = static_cast<MainWindow *>(_o);
         switch (_id) {
-        case 0: _t->uiValuesChanged((*reinterpret_cast< double(*)>(_a[1])),(*reinterpret_cast< double(*)>(_a[2])),(*reinterpret_cast< double(*)>(_a[3])),(*reinterpret_cast< double(*)>(_a[4])),(*reinterpret_cast< double(*)>(_a[5]))); break;
+        case 0: _t->uiValuesChanged((*reinterpret_cast< Signal(*)>(_a[1]))); break;
         case 1: _t->on_pushButton_9_clicked(); break;
         case 2: _t->on_pushButton_2_clicked(); break;
         case 3: _t->on_pushButton_3_clicked(); break;
         case 4: _t->on_pushButton_6_clicked(); break;
         case 5: _t->on_pushButton_5_clicked(); break;
         case 6: _t->on_pushButton_4_clicked(); break;
-        case 7: _t->setUiValues((*reinterpret_cast< double(*)>(_a[1])),(*reinterpret_cast< double(*)>(_a[2])),(*reinterpret_cast< double(*)>(_a[3])),(*reinterpret_cast< double(*)>(_a[4])),(*reinterpret_cast< double(*)>(_a[5]))); break;
+        case 7: _t->setUiValues((*reinterpret_cast< Signal(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -117,9 +114,9 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 }
 
 // SIGNAL 0
-void MainWindow::uiValuesChanged(double _t1, double _t2, double _t3, double _t4, double _t5)
+void MainWindow::uiValuesChanged(Signal _t1)
 {
-    void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)), const_cast<void*>(reinterpret_cast<const void*>(&_t3)), const_cast<void*>(reinterpret_cast<const void*>(&_t4)), const_cast<void*>(reinterpret_cast<const void*>(&_t5)) };
+    void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 QT_END_MOC_NAMESPACE

@@ -13,6 +13,7 @@
 #include<stdlib.h>
 #include<vector>
 #include "CKobuki.h"
+#include "Signal.h"
 
 #include "rplidar.h"
 namespace Ui {
@@ -29,6 +30,7 @@ public:
     void robotprocess();
     void laserprocess();
     void processThisLidar(LaserMeasurement &laserData);
+    void encDiff(); //dorobena
 
     void processThisRobot();
     pthread_t robotthreadHandle; // handle na vlakno
@@ -57,6 +59,7 @@ public:
     int rob_s,  rob_recv_len;
     unsigned int rob_slen;
 
+
     QMutex mutex;
 private slots:
     void on_pushButton_9_clicked();
@@ -71,7 +74,7 @@ private slots:
 
     void on_pushButton_4_clicked();
 
-    double encDiff();
+
 
 private:
     Ui::MainWindow *ui;
@@ -82,10 +85,12 @@ private:
      CKobuki robot;
      TKobukiData robotdata;
      int datacounter;
+     Signal mysig;
+
 public slots:
-     void setUiValues(double encL,double encR,double robotX,double robotY,double robotFi);
+     void setUiValues(Signal sig);
 signals:
-     void uiValuesChanged(double newEncoderL,double newEncoderR,double newrobotX,double newrobotY,double newrobotFi); ///toto nema telo
+     void uiValuesChanged(Signal newsig); ///toto nema telo
 };
 
 #endif // MAINWINDOW_H

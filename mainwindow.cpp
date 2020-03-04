@@ -86,8 +86,12 @@ void MainWindow::processThisRobot()
         /// okno pocuva vo svojom slote a vasu premennu nastavi tak ako chcete
         robotdata.distanceLeft = robotdata.EncoderLeft * robot.getTick();
         robotdata.distanceRight = robotdata.EncoderRight * robot.getTick();
-
-        emit uiValuesChanged(robotdata.EncoderLeft,robotdata.EncoderRight,robotdata.distanceLeft,robotdata.distanceRight,100);
+        mysig.encL = robotdata.EncoderLeft;
+        mysig.encR = robotdata.EncoderRight;
+        mysig.robotX = robotdata.distanceLeft;
+        mysig.robotY = robotdata.distanceRight;
+        mysig.robotFi = 100;
+        emit uiValuesChanged(mysig);
         ///toto neodporucam na nejake komplikovane struktury. robit to kopiu dat. radsej vtedy posielajte
         /// prazdny signal a slot bude vykreslovat strukturu (vtedy ju musite mat samozrejme ako member premmennu v mainwindow.ak u niekoho najdem globalnu premennu,tak bude cistit bludisko zubnou kefkou.. kefku dodam)
         /// vtedy ale odporucam pouzit mutex, aby sa vam nestalo ze budete pocas vypisovania prepisovat niekde inde
@@ -111,13 +115,16 @@ void MainWindow::processThisLidar(LaserMeasurement &laserData)
 }
 
 
-void  MainWindow::setUiValues(double encL,double encR,double robotX,double robotY,double robotFi)
+void  MainWindow::setUiValues(Signal sig)
 {
-     ui->lineEdit_2->setText(QString::number(robotX));
-     ui->lineEdit_3->setText(QString::number(robotY));
-     ui->lineEdit_4->setText(QString::number(robotFi));
-     ui->lineEdit_5->setText(QString::number(encL));
-     ui->lineEdit_6->setText(QString::number(encR));
+     ui->lineEdit_2->setText(QString::number(sig.robotX));
+     ui->lineEdit_3->setText(QString::number(sig.robotY));
+     ui->lineEdit_4->setText(QString::number(sig.robotFi));
+     ui->lineEdit_5->setText(QString::number(sig.encL));
+     ui->lineEdit_6->setText(QString::number(sig.encR));
+     ui->lineEdit_7->setText(QString::number(50));
+     ui->lineEdit_8->setText(QString::number(100));
+
 }
 
 void MainWindow::on_pushButton_9_clicked() //start button
@@ -127,7 +134,7 @@ void MainWindow::on_pushButton_9_clicked() //start button
      laserthreadID=pthread_create(&laserthreadHandle,NULL,&laserUDPVlakno,(void *)this);
       robotthreadID=pthread_create(&robotthreadHandle,NULL,&robotUDPVlakno,(void *)this);
 ///toto je prepojenie signalu o zmene udajov, na signal
-      connect(this,SIGNAL(uiValuesChanged(double,double,double,double,double)),this,SLOT(setUiValues(double,double,double,double,double)));
+      connect(this,SIGNAL(uiValuesChanged(Signal)),this,SLOT(setUiValues(Signal)));
 }
 
 void MainWindow::on_pushButton_2_clicked() //forward

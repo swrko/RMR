@@ -120,8 +120,8 @@ typedef struct
     double distanceRight;
     double startEncL;
     double startEncR;
-    short int encOverFlowL;
-    short int encOverFlowR;
+    unsigned short int encOverFlowL;
+    unsigned short int encOverFlowR;
 
 }TKobukiData;
 
