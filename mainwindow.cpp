@@ -15,7 +15,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ///tu je napevno nastavena ip. treba zmenit na to co ste si zadali do text boxu alebo nejaku inu pevnu. co bude spravna
-    ipaddress="192.168.1.14";
+    //ipaddress="192.168.1.14";
+    ipaddress="127.0.0.1";
     ui->setupUi(this);
     datacounter=0;
 }
@@ -59,20 +60,152 @@ void MainWindow::paintEvent(QPaintEvent *event)
             int xp=rect.width()-(rect.width()/2+dist*2*sin((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().x();
             int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().y();
             if(rect.contains(xp,yp))
-                painter.drawEllipse(QPoint(xp, yp),2,2);//vykreslime kruh s polomerom 2px
+                painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px
         }
         mutex.unlock();//unlock..skoncil som
     }
+}
+
+double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
+    double result =sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+}
+
+bool MainWindow::loadTargetCoord(){
+    targetX = ui->lineEdit_11->text().toDouble();
+    targetY = ui->lineEdit_12->text().toDouble();
+    return TRUE;
+}
+
+double MainWindow::calcAngle(double x1, double y1, double x2, double y2){
+    return atan2(x2-x1,y2-y1);
 }
 
 void MainWindow::encDiff(){
     /// funckia bude vraciat rozdiel medzi pociatocnou hodnotou encodera a aktualnou
     /// taktiez treba spravit kontrolu pretecenia buffera pre encoder
 
+    /// detekcia pretecenia encodera v oboch smeroch - lave koleso
+    if(pEncL-robotdata.EncoderLeft >(60000)){
+        distanceL = robot.getTick()*(robotdata.EncoderLeft-pEncL + 65535);
+    }else if(pEncL-robotdata.EncoderLeft <(-60000)){
+        distanceL = robot.getTick()*(robotdata.EncoderLeft-pEncL - 65535);
+    }else distanceL = robot.getTick()*(robotdata.EncoderLeft - pEncL);
+
+    /// detekcia pretecenia encodera v oboch smeroch - prave koleso
+    if(pEncR-robotdata.EncoderRight >(60000)){
+        distanceR = robot.getTick()*(robotdata.EncoderRight-pEncR + 65535);
+    }else if(pEncR-robotdata.EncoderRight<(-60000)){
+        distanceR = robot.getTick()*(robotdata.EncoderRight-pEncR - 65535);
+    }else distanceR = robot.getTick()*(robotdata.EncoderRight- pEncR);
+
+    /// vypocet uhla natocenia z odometrie
+    fi = pFi + (distanceR - distanceL)/(1.0*robot.getB());
+    /*if(((distanceR - distanceL)/(1.0*robot.getB())) > 0){
+        fi = pFi + (distanceR - distanceL)/(1.0*robot.getB());
+    }else{
+        fi = pFi - (distanceR - distanceL)/(1.0*robot.getB());
+    }
+    */
+    //fi = (fi>0 ? fi :-fi);
+    // fi = fabs(fi);
+    //fi =(fi*180/M_PI,360)*M_PI/180;
+    fi = fmod(fi,(2*M_PI));
+    ///absolutna hodnota natocenia
+    if(fi < 0) fip = (2*M_PI) + fi;
+    else fip = fi;
+
+    if(distanceL == distanceR){
+       // cout << "1:";
+        x = x + distanceR*cos(pFi);
+        y = y + distanceR*sin(pFi);
+    }else{
+       // cout << "0:";
+        x = x + ((robot.getB()*(distanceR + distanceL)/(2.0*(distanceR-distanceL)))*(sin(fi)-sin(pFi)));
+        y = y - ((robot.getB()*(distanceR + distanceL)/(2.0*(distanceR-distanceL)))*(cos(fi)-cos(pFi)));
+    }
+
+    //cout <<" Fideg: " << pFi*180.0/M_PI << "   " << "Fi: " << pFi << endl;
+    //cout <<"x: " << x << "   " << "y: " << y << endl;
+
+    pFi = fi;
+
+}
+
+void MainWindow::rotateRobot(){
+  /* if(angleErr > 0) on_pushButton_6_clicked(); // Right
+           else on_pushButton_5_clicked();  // Left*/
+    on_pushButton_6_clicked(); //left
 }
 
 void MainWindow::processThisRobot()
 {
+    encDiff();
+
+    targetFi = calcAngle(x,y,targetX,targetY);
+    targetDist = twoPoitDistance(x,y,targetX,targetY);
+    if(targetFi>0.0) targetFi = (2*M_PI) - targetFi;
+    else targetFi = - targetFi;
+    targetFi = fmod(targetFi+M_PI_2,(2*M_PI));
+
+    //targetFi = fmod(targetFi+90,360);
+    //targetFi = targetFi*M_PI/180;
+    angleErr =  targetFi -fip;
+    if((targetFi > (320.0/180)*M_PI) && (fip < (40.0/180)*M_PI))
+        angleErr = (2*M_PI)-angleErr;
+
+
+    cout<< "targetx:  " << targetX << "  targety:  " << targetY << endl;
+    cout<< "targetfi:  " << targetFi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<targetDist << endl;
+    cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
+    cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
+if(datacounter%2 == 0){
+    if(startState){
+        //if(angleErr > 0 && angleErr > M_PI_4){
+        if(abs(angleErr)>M_PI_4){
+            rotateState = TRUE;
+            rotateRobot();
+        }else {
+            MainWindow::on_pushButton_4_clicked();  // Stop
+            rotateState = FALSE;
+        }
+
+       if(targetDist< 0.05){
+            startState = FALSE;
+            rotateState = FALSE;
+            MainWindow::on_pushButton_11_clicked();  // Stop
+            cout<< "Target reached" << endl;
+        }
+
+    }
+       if(!rotateState && startState){
+           /// Rozbeh po kruznici
+           regData.Rcirc = regData.Krc/(angleErr);
+           regData.TransSp = regData.Kts*targetDist;
+
+           if(regData.TransSp > regData.max_trans_speed) regData.TransSp = regData.max_trans_speed;
+
+            if(isinf(regData.Rcirc)) regData.Rcirc = 20000;
+           // if(isinf(regData.Rcirc) && regData.Rcirc < 0) regData.Rcirc = -1000;
+
+            std::vector<unsigned char> mess=robot.setArcSpeed((int)regData.TransSp,(int)regData.Rcirc);
+            if (sendto(rob_s, (char*)mess.data(), sizeof(char)*mess.size(), 0, (struct sockaddr*) &rob_si_posli, rob_slen) == -1)
+            {
+
+            }
+
+             cout<< "R:  " << regData.Rcirc<< "  T:  " << regData.TransSp << "  err:  "<< angleErr << "  dist:  " << targetDist <<endl;
+       }
+}
+
+      /* if (!rotateState && startState){
+
+           std::vector<unsigned char> mess=robot.setArcSpeed(200,20000);
+           if (sendto(rob_s, (char*)mess.data(), sizeof(char)*mess.size(), 0, (struct sockaddr*) &rob_si_posli, rob_slen) == -1)
+           {
+
+           }
+       }*/
+
     ///tu mozete robit s datami z robota
      /// ale nic vypoctovo narocne - to iste vlakno ktore cita data z robota
     ///teraz tu len vypisujeme data z robota(kazdy 5ty krat. ale mozete skusit aj castejsie). vyratajte si polohu. a vypiste spravnu
@@ -85,24 +218,19 @@ void MainWindow::processThisRobot()
         /// lepsi pristup je nastavit len nejaku premennu, a poslat signal oknu na prekreslenie
         /// okno pocuva vo svojom slote a vasu premennu nastavi tak ako chcete
 
-    if (robotdata.EncoderLeft == robotdata.tmpPencL && robotdata.EncoderRight == robotdata.tmpPencR){
 
-    }else{
-        robotdata.pEncL = robotdata.tmpPencL;
-        robotdata.pEncR = robotdata.tmpPencR;
-    }
-
+/*
     if ((robotdata.pEncL - (double)60000) > robotdata.EncoderLeft && robotdata.pEncL > robotdata.EncoderLeft ){
-
+        //robotdata.pretecenieL += 1;
+        mysig.pretecenieL += 1;
     }
     if ((robotdata.pEncR - (double)60000) > robotdata.EncoderRight && robotdata.pEncR > robotdata.EncoderRight){
-
+        //robotdata.pretecenieR += 1;
+        mysig.pretecenieR += 1;
     }
-        mysig.pEncL = robotdata.pEncL;
-        mysig.pEncR = robotdata.pEncR;
-        mysig.encL = robotdata.EncoderLeft;
-        mysig.encR = robotdata.EncoderRight;
-        mysig.robotFi = 100;
+    */
+
+
         emit uiValuesChanged(mysig);
         /// toto neodporucam na nejake komplikovane struktury. robit to kopiu dat. radsej vtedy posielajte
         /// prazdny signal a slot bude vykreslovat strukturu (vtedy ju musite mat samozrejme ako member premmennu v mainwindow.ak u niekoho najdem globalnu premennu,tak bude cistit bludisko zubnou kefkou.. kefku dodam)
@@ -110,48 +238,71 @@ void MainWindow::processThisRobot()
 
     }
     datacounter++;
+
 }
 
 void MainWindow::processThisLidar(LaserMeasurement &laserData)
 {
      mutex.lock();//idem prepisovat copyOfLaserData ktoru pouziva paintEvent
-    memcpy( &copyOfLaserData,&laserData,sizeof(LaserMeasurement));
+     memcpy( &copyOfLaserData,&laserData,sizeof(LaserMeasurement));
     //tu mozete robit s datami z lidaru.. napriklad najst prekazky, zapisat do mapy. naplanovat ako sa prekazke vyhnut.
+
      // ale nic vypoctovo narocne - to iste vlakno ktore cita data z lidaru
-    updateLaserPicture=1;
+     updateLaserPicture=1;
      mutex.unlock();//skoncil som
-    update();//tento prikaz je vlastne signal, ktory prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
-
-
-
+     update();//tento prikaz je vlastne signal, ktory prinuti prekreslit obrazovku.. zavola sa paintEvent funkcia
 }
-
 
 void  MainWindow::setUiValues(Signal sig)
 {
-     ui->lineEdit_2->setText(QString::number(sig.pEncL));
-     ui->lineEdit_3->setText(QString::number(sig.pEncR));
+     ui->lineEdit_2->setText(QString::number(sig.distx));
+     ui->lineEdit_3->setText(QString::number(sig.disty));
      ui->lineEdit_4->setText(QString::number(sig.robotFi));
      ui->lineEdit_5->setText(QString::number(sig.encL));
      ui->lineEdit_6->setText(QString::number(sig.encR));
      ui->lineEdit_7->setText(QString::number(sig.startL));
      ui->lineEdit_8->setText(QString::number(sig.startR));
+     ui->lineEdit_9->setText(QString::number(sig.tmpPencR));
+     ui->lineEdit_10->setText(QString::number(sig.tmpPencL));
+
+}
+void MainWindow::on_pushButton_11_clicked() //stop stop
+{
+    startState = FALSE;
+    std::vector<unsigned char> mess=robot.setArcSpeed(0,0);
+    if (sendto(rob_s, (char*)mess.data(), sizeof(char)*mess.size(), 0, (struct sockaddr*) &rob_si_posli, rob_slen) == -1)
+    {
+
+    }
+
+}
+
+void MainWindow::on_pushButton_10_clicked() //go on!
+{
+    if(loadTargetCoord()){
+        targetDist = twoPoitDistance(x,y,targetX,targetY);
+        targetFi = calcAngle(x,y,targetX,targetY);
+       // cout << "targetX: "<< "  "<< targetX << "targetY: " << "  "<< targetY << "targetDist: " << "  " << targetDist << "targetFi: " << "  " << targetFi << endl;
+        startState = TRUE;
+    }else cout << "nespravny format target suradnic !" << endl;
+
 
 }
 
 void MainWindow::on_pushButton_9_clicked() //start button
 {
 
-    //tu sa nastartuju vlakna ktore citaju data z lidaru a robota
-     laserthreadID=pthread_create(&laserthreadHandle,NULL,&laserUDPVlakno,(void *)this);
-      robotthreadID=pthread_create(&robotthreadHandle,NULL,&robotUDPVlakno,(void *)this);
-///toto je prepojenie signalu o zmene udajov, na signal
-      connect(this,SIGNAL(uiValuesChanged(Signal)),this,SLOT(setUiValues(Signal)));
-       sleep(2);
-      mysig.startL = robotdata.EncoderLeft;
-      mysig.startR = robotdata.EncoderRight;
-      robotdata.pEncL = robotdata.EncoderLeft;
-      robotdata.pEncR = robotdata.EncoderRight;
+  //tu sa nastartuju vlakna ktore citaju data z lidaru a robota
+  laserthreadID=pthread_create(&laserthreadHandle,NULL,&laserUDPVlakno,(void *)this);
+  robotthreadID=pthread_create(&robotthreadHandle,NULL,&robotUDPVlakno,(void *)this);
+  ///toto je prepojenie signalu o zmene udajov, na signal
+  connect(this,SIGNAL(uiValuesChanged(Signal)),this,SLOT(setUiValues(Signal)));
+  sleep(2);
+  /// nastavenie pociatocnych hodnot encodera
+  mysig.startL = startEncL = robotdata.EncoderLeft;
+  mysig.startR = startEncR = robotdata.EncoderRight;
+  x=y=0.0; fi=pFi=M_PI_2;  // 90 stupnov
+  loadTargetCoord();
 }
 
 void MainWindow::on_pushButton_2_clicked() //forward
@@ -203,6 +354,7 @@ void MainWindow::on_pushButton_4_clicked() //stop
     {
 
     }
+
 }
 
 
@@ -210,11 +362,6 @@ void MainWindow::on_pushButton_4_clicked() //stop
 /// toto je funkcia s nekonecnou sluckou,ktora cita data z lidaru (UDP komunikacia)
 void MainWindow::laserprocess()
 {
-
-
-
-
-
     // Initialize Winsock
 
     las_slen = sizeof(las_si_other);
@@ -317,10 +464,12 @@ void MainWindow::robotprocess()
   //      clock_gettime(CLOCK_REALTIME,&t);
 
         //zapamatanie predoslej hodnoty
-        robotdata.tmpPencL = robotdata.EncoderLeft;
-        robotdata.tmpPencR = robotdata.EncoderRight;
+
+            pEncL = robotdata.EncoderLeft;
+            pEncR = robotdata.EncoderRight;
 
         int returnval=robot.fillData(robotdata,(unsigned char*)buff);
+
 
 
         if(returnval==0)

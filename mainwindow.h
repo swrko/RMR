@@ -14,11 +14,19 @@
 #include<vector>
 #include "CKobuki.h"
 #include "Signal.h"
-
+#include "cmath"
 #include "rplidar.h"
 namespace Ui {
 class MainWindow;
 }
+
+typedef struct{
+    double Krc = 320;
+    double Kts = 400;// rozdiel je v metroch rychlost chcem v mm >> chyba v metroch >> 100vky mm
+    double Rcirc;
+    double TransSp;
+    const double max_trans_speed = 400;
+}Regstruct;
 
 class MainWindow : public QMainWindow
 {
@@ -31,6 +39,10 @@ public:
     void laserprocess();
     void processThisLidar(LaserMeasurement &laserData);
     void encDiff(); //dorobena
+    bool loadTargetCoord();
+    double twoPoitDistance(double x1, double y1, double x2, double y2);
+    double calcAngle(double x1, double y1, double x2, double y2);
+    void rotateRobot();
 
     void processThisRobot();
     pthread_t robotthreadHandle; // handle na vlakno
@@ -62,6 +74,10 @@ public:
 
     QMutex mutex;
 private slots:
+    void on_pushButton_11_clicked();
+
+    void on_pushButton_10_clicked();
+
     void on_pushButton_9_clicked();
 
     void on_pushButton_2_clicked();
@@ -85,7 +101,32 @@ private:
      CKobuki robot;
      TKobukiData robotdata;
      int datacounter;
+     double pEncL;
+     double pEncR;
+     double startEncL;
+     double startEncR;
+     double distanceL;
+     double distanceR;
+     double pDistanceL;
+     double pDistanceR;
+     double fi;
+     double fip;
+     double pFi;
+     double x;
+     double y;
+     double targetX;
+     double targetY;
+     double targetDist;
+     double targetFi;
+     bool startState = FALSE;
+     bool rotateState = FALSE;
+     bool translateState = FALSE;
+     double desiredAngle = 0;
+     double desiredDistance = 0;
+     double robotDistance = 0;
+     double angleErr = 0;
      Signal mysig;
+     Regstruct regData;
 
 public slots:
      void setUiValues(Signal sig);

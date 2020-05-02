@@ -35,6 +35,8 @@
 
 using namespace std;
 
+
+
 typedef struct
 {
 	
@@ -116,12 +118,8 @@ typedef struct
 	unsigned short analogInputCh3;
 	//---struktura s datami ktore sa nam tam objavia iba na poziadanie
 	TExtraRequestData extraInfo;
-    double pEncL;
-    double pEncR;
-    double startEncL;
-    double startEncR;
-    double tmpPencL;
-    double tmpPencR;
+
+
 
 }TKobukiData;
 
@@ -135,10 +133,10 @@ public:
 
 		std::cout << "kobuki instantiated" << std::endl;
 
-	};
+    }
 	 virtual ~CKobuki() { 
 
-	};
+    }
 	
 
 
@@ -168,8 +166,8 @@ private:
 	//--spustenie merania v novom vlakne (vycitavanie bezi v novom vlakne. treba ho stopnut ak chceme poslat request)
 
 
-    static const long double tickToMeter = 0.000085292090497737556558; // [m/tick]
-    static const long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
+    static constexpr long double tickToMeter = 0.000085292090497737556558; // [m/tick]
+    static constexpr long double b = 0.23; // wheelbase distance in meters, from kobuki manual https://yujinrobot.github.io/kobuki/doxygen/enAppendixProtocolSpecification.html
 //
 
 
