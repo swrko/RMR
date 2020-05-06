@@ -44,6 +44,7 @@ typedef struct
     int numberOfScans;
     LaserData Data[1000];
 }LaserMeasurement;
+
 class rplidar
 {
 public:
@@ -102,6 +103,7 @@ public:
 
     //veci na broadcast
     struct sockaddr_in si_me, si_other,si_posli;
+
 
         int s,  recv_len;
         unsigned int slen;

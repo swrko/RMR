@@ -45,6 +45,14 @@ typedef struct
 	unsigned short z;
 
 }TRawGyroData;
+
+typedef struct
+{
+    double Diameter = 350.0;
+    double R = 175.0;
+
+} TShellData;
+
 typedef struct
 {
 	//Hardware Version

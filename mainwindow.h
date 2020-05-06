@@ -16,6 +16,8 @@
 #include "Signal.h"
 #include "cmath"
 #include "rplidar.h"
+#include "limits.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -27,6 +29,46 @@ typedef struct{
     double TransSp;
     const double max_trans_speed = 400;
 }Regstruct;
+
+typedef struct {
+    //najblizsi bod
+    double minDcrit;
+    double minDist;
+    double minAngle;
+    double forminAngle;
+    double minX;
+    double minY;
+    //lavy kraj
+    double DcritL;
+    double DistL;
+    double AngleL;
+    double formAngleL;
+    double XL;
+    double YL;
+    //pravy kraj
+    double DcritR;
+    double DistR;
+    double AngleR;
+    double formAngleR;
+    double XR;
+    double YR;
+
+    double maxDistL;
+    double maxAngleL;
+    double maxXL;
+    double maxYL;
+
+    double maxDistR;
+    double maxAngleR;
+    double maxXR;
+    double maxYR;
+
+    bool minPoint;
+    bool minPointL;
+    bool minPointR;
+    bool maxPointL;
+    bool maxPointR;
+}LidarData4Reg;
 
 class MainWindow : public QMainWindow
 {
@@ -43,6 +85,8 @@ public:
     double twoPoitDistance(double x1, double y1, double x2, double y2);
     double calcAngle(double x1, double y1, double x2, double y2);
     void rotateRobot();
+    void angleDistFormating();
+    void angleDistRegulator();
 
     void processThisRobot();
     pthread_t robotthreadHandle; // handle na vlakno
@@ -90,16 +134,16 @@ private slots:
 
     void on_pushButton_4_clicked();
 
-
-
 private:
     Ui::MainWindow *ui;
      void paintEvent(QPaintEvent *event);// Q_DECL_OVERRIDE;
      int updateLaserPicture;
      LaserMeasurement copyOfLaserData;
+     LidarData4Reg lD4R;
      std::string ipaddress;
      CKobuki robot;
      TKobukiData robotdata;
+     TShellData robotshell;
      int datacounter;
      double pEncL;
      double pEncR;
@@ -110,7 +154,7 @@ private:
      double pDistanceL;
      double pDistanceR;
      double fi;
-     double fip;
+     double fip = 0;
      double pFi;
      double x;
      double y;
