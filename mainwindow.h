@@ -70,6 +70,14 @@ typedef struct {
     bool maxPointR;
 }LidarData4Reg;
 
+
+typedef struct{
+    double x;
+    double y;
+    double fi;
+    double dist;
+}worldPoint;
+
 typedef struct {
     double minDist2Target;
 
@@ -86,7 +94,7 @@ public:
     void laserprocess();
     void processThisLidar(LaserMeasurement &laserData);
     void encDiff(); //dorobena
-    bool loadTargetCoord();
+    worldPoint loadTargetCoord(worldPoint target);
     double twoPoitDistance(double x1, double y1, double x2, double y2);
     double calcAngle(double x1, double y1, double x2, double y2);
     void rotateRobot();
@@ -166,10 +174,6 @@ private:
      double pFi;
      double x;
      double y;
-     double targetX;
-     double targetY;
-     double targetDist;
-     double targetFi;
      bool startState = FALSE;
      bool rotateState = FALSE;
      bool translateState = FALSE;
@@ -181,6 +185,8 @@ private:
      double angleErr = 0;
      Signal mysig;
      Regstruct regData;
+     worldPoint newTarget;
+     worldPoint finalTarget;
 
 public slots:
      void setUiValues(Signal sig);

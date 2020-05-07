@@ -82,9 +82,9 @@ void MainWindow::paintEvent(QPaintEvent *event)
                 lD4R.maxAngleL = -HUGE_VAL;
                 lD4R.maxDistR = -HUGE_VAL;
                 lD4R.maxAngleR = -HUGE_VAL;
-               loadTargetCoord();
-               targetFi = calcAngle(x,y,targetX,targetY);
-               angleDistFormating();
+                newTarget = loadTargetCoord(newTarget);
+                newTarget.fi= calcAngle(x,y,newTarget.x,newTarget.y);
+                angleDistFormating();
 
                // lD4R.minDist = copyOfLaserData.Data[k].scanDistance; //dufam ze v mm
                // lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
@@ -116,7 +116,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
                 lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
            }
         */
-            angleDiff = (fip - targetFi)*180/M_PI;
+            angleDiff = (fip - newTarget.fi)*180/M_PI;
             if (angleDiff < 0) angleDiff = 360 + angleDiff;
 
            ///zistujem prekazku na uhle voci bodu
@@ -161,7 +161,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
                     painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px;
             }
 
-        /// vypocet svetovych suradnic bodu
+        /// vypocet svetovych suradnic bodu minDist
         if(!isinf(lD4R.minDist) && !isinf(lD4R.minAngle)){
             lD4R.forminAngle = fmod((lD4R.minAngle*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
             lD4R.minX = x + ((lD4R.minDist/1000.0)*cos(lD4R.forminAngle));
@@ -169,7 +169,23 @@ void MainWindow::paintEvent(QPaintEvent *event)
             lD4R.minPoint = TRUE;
         }else lD4R.minPoint = FALSE;
 
-           cout << "targetFi:  " << targetFi*180/M_PI << "  fip:  " << fip*180/M_PI  << "  angleDiff:  " << angleDiff << "  minDist:  " << lD4R.minDist << "  minAngle:  " << fmod(lD4R.minAngle*180/M_PI,360)  << endl;
+        /// vypocet svetovych suradnic bodu DistL
+        if(!isinf(lD4R.DistL) && !isinf(lD4R.AngleL)){
+            lD4R.formAngleL = fmod((lD4R.AngleL*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            lD4R.XL = x + ((lD4R.DistL/1000.0)*cos(lD4R.formAngleL));
+            lD4R.YL = y + ((lD4R.DistL/1000.0)*sin(lD4R.formAngleL));
+            lD4R.minPointL = TRUE;
+        }else lD4R.minPointL = FALSE;
+
+        /// vypocet svetovych suradnic bodu
+        if(!isinf(lD4R.DistR) && !isinf(lD4R.AngleR)){
+            lD4R.formAngleR = fmod((lD4R.AngleR*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            lD4R.XR = x + ((lD4R.DistR/1000.0)*cos(lD4R.formAngleR));
+            lD4R.YR = y + ((lD4R.DistR/1000.0)*sin(lD4R.formAngleR));
+            lD4R.minPointR = TRUE;
+        }else lD4R.minPointR = FALSE;
+
+          // cout << "targetFi:  " << targetFi*180/M_PI << "  fip:  " << fip*180/M_PI  << "  angleDiff:  " << angleDiff << "  minDist:  " << lD4R.minDist << "  minAngle:  " << fmod(lD4R.minAngle*180/M_PI,360)  << endl;
 
         /// vykreslenie bodu mindist
         int dist=lD4R.minDist/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
@@ -247,10 +263,10 @@ double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
    return (double)sqrt(pow(x2-x1,2)+pow(y2-y1,2));
 }
 
-bool MainWindow::loadTargetCoord(){
-    targetX = ui->lineEdit_11->text().toDouble();
-    targetY = ui->lineEdit_12->text().toDouble();
-    return TRUE;
+worldPoint MainWindow::loadTargetCoord(worldPoint target){
+    target.x = ui->lineEdit_11->text().toDouble();
+    target.y = ui->lineEdit_12->text().toDouble();
+    return target;
 }
 
 double MainWindow::calcAngle(double x1, double y1, double x2, double y2){
@@ -413,16 +429,18 @@ void MainWindow::wallFollowing(){
 }
 
 void MainWindow::angleDistFormating(){
-    targetFi = calcAngle(x,y,targetX,targetY);
-    targetDist = twoPoitDistance(x,y,targetX,targetY);
-    if(targetFi>0.0) targetFi = (2*M_PI) - targetFi;
-    else targetFi = - targetFi;
-    targetFi = fmod(targetFi+M_PI_2,(2*M_PI));
+
+    //pocita a upravuje pre newTarget
+    newTarget.fi = calcAngle(x,y,newTarget.x,newTarget.y);
+    newTarget.dist = twoPoitDistance(x,y,newTarget.x,newTarget.y);
+    if(newTarget.fi>0.0) newTarget.fi = (2*M_PI) - newTarget.fi;
+    else newTarget.fi = - newTarget.fi;
+    newTarget.fi = fmod(newTarget.fi+M_PI_2,(2*M_PI));
 
     //targetFi = fmod(targetFi+90,360);
     //targetFi = targetFi*M_PI/180;
-    angleErr =  targetFi -fip;
-    if((targetFi > (320.0/180)*M_PI) && (fip < (40.0/180)*M_PI))
+    angleErr =  newTarget.fi -fip;
+    if((newTarget.fi > (320.0/180)*M_PI) && (fip < (40.0/180)*M_PI))
         angleErr = (2*M_PI)-angleErr;
 }
 
@@ -438,7 +456,7 @@ void MainWindow::angleDistRegulator(){
             rotateState = FALSE;
         }
 
-       if(targetDist< 0.05){
+       if(newTarget.dist< 0.05){
             startState = FALSE;
             rotateState = FALSE;
             MainWindow::on_pushButton_11_clicked();  // Stop
@@ -449,7 +467,7 @@ void MainWindow::angleDistRegulator(){
        if(!rotateState && startState){
            /// Rozbeh po kruznici
            regData.Rcirc = regData.Krc/(angleErr);
-           regData.TransSp = regData.Kts*targetDist;
+           regData.TransSp = regData.Kts*newTarget.dist;
 
            if(regData.TransSp > regData.max_trans_speed) regData.TransSp = regData.max_trans_speed;
 
@@ -462,7 +480,7 @@ void MainWindow::angleDistRegulator(){
 
             }
 
-             cout<< "R:  " << regData.Rcirc<< "  T:  " << regData.TransSp << "  err:  "<< angleErr << "  dist:  " << targetDist <<endl;
+             cout<< "R:  " << regData.Rcirc<< "  T:  " << regData.TransSp << "  err:  "<< angleErr << "  dist:  " << newTarget.dist <<endl;
        }
 
 }
@@ -472,12 +490,12 @@ void MainWindow::processThisRobot()
     encDiff();
     angleDistFormating();
 
-/*
-    cout<< "targetx:  " << targetX << "  targety:  " << targetY << endl;
-    cout<< "targetfi:  " << targetFi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<targetDist << endl;
+    cout<< "targetx:  " << newTarget.x << "  targety:  " << newTarget.y << endl;
+    cout<< "targetfi:  " << newTarget.fi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<newTarget.dist << endl;
     cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
     cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
-*/
+
+
     if(datacounter%2 == 0){
         angleDistRegulator();
     }
@@ -551,6 +569,7 @@ void  MainWindow::setUiValues(Signal sig)
      ui->lineEdit_10->setText(QString::number(sig.tmpPencL));
 
 }
+
 void MainWindow::on_pushButton_11_clicked() //stop stop
 {
     startState = FALSE;
@@ -564,14 +583,11 @@ void MainWindow::on_pushButton_11_clicked() //stop stop
 
 void MainWindow::on_pushButton_10_clicked() //go on!
 {
-    if(loadTargetCoord()){
-        targetDist = twoPoitDistance(x,y,targetX,targetY);
-        targetFi = calcAngle(x,y,targetX,targetY);
+
+        newTarget.dist = twoPoitDistance(x,y,newTarget.x,newTarget.y);
+        newTarget.fi = calcAngle(x,y,newTarget.x,newTarget.y);
        // cout << "targetX: "<< "  "<< targetX << "targetY: " << "  "<< targetY << "targetDist: " << "  " << targetDist << "targetFi: " << "  " << targetFi << endl;
         startState = TRUE;
-    }else cout << "nespravny format target suradnic !" << endl;
-
-
 }
 
 void MainWindow::on_pushButton_9_clicked() //start button
@@ -587,7 +603,7 @@ void MainWindow::on_pushButton_9_clicked() //start button
   mysig.startL = startEncL = robotdata.EncoderLeft;
   mysig.startR = startEncR = robotdata.EncoderRight;
   x=y=0.0; fi=pFi=M_PI_2;  // 90 stupnov
-  loadTargetCoord();
+  newTarget = loadTargetCoord(newTarget);
 }
 
 void MainWindow::on_pushButton_2_clicked() //forward
