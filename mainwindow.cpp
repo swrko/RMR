@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     datacounter=0;
     lD4R.minDcrit = robotshell.Diameter;
-    lD4R.DcritR = lD4R.DcritL = (3/2)*robotshell.Diameter/(sin(45.0));
+    lD4R.DcritR = lD4R.DcritL = 3*robotshell.Diameter/(sin(45.0));
 
 }
 
@@ -35,7 +35,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     ///prekreslujem lidar len vtedy, ked viem ze mam nove data. paintevent sa
     /// moze pochopitelne zavolat aj z inych dovodov, napriklad zmena velkosti okna
     painter.setBrush(Qt::black);//cierna farba pozadia(pouziva sa ako fill pre napriklad funkciu drawRect)
-    QPen pero,pero2,pero3;
+    QPen pero,pero2,pero3,pero4;
 
     pero.setStyle(Qt::SolidLine); //styl pera - plna ciara
     pero.setWidth(3);//hrubka pera -3pixely
@@ -48,6 +48,11 @@ void MainWindow::paintEvent(QPaintEvent *event)
     pero3.setStyle(Qt::SolidLine); //styl pera - plna ciara
     pero3.setWidth(3);//hrubka pera -3pixely
     pero3.setColor(Qt::magenta);//farba je magenta
+
+    pero4.setStyle(Qt::SolidLine); //styl pera - plna ciara
+    pero4.setWidth(3);//hrubka pera -3pixely
+    pero4.setColor(Qt::yellow);//farba je zlta
+
     QRect rect;//(20,120,700,500);
     rect= ui->frame->geometry();//ziskate porametre stvorca,do ktoreho chcete kreslit
 
@@ -59,12 +64,13 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
         mutex.lock();//lock.. idem robit s premennou ktoru ine vlakno moze prepisovat...
         updateLaserPicture=0;
+        double  angleDiff;
 
         painter.setPen(pero);
         ///teraz sa tu kreslia udaje z lidaru. ak chcete, prerobte
         for(int k=0;k<copyOfLaserData.numberOfScans;k++)
         {
-           ///najdenie bodu s najmensiou vzdialenostou
+           ///initials
            if(k == 0){
                 lD4R.minDist = HUGE_VAL;
                 lD4R.minAngle = HUGE_VAL;
@@ -76,9 +82,14 @@ void MainWindow::paintEvent(QPaintEvent *event)
                 lD4R.maxAngleL = -HUGE_VAL;
                 lD4R.maxDistR = -HUGE_VAL;
                 lD4R.maxAngleR = -HUGE_VAL;
+               loadTargetCoord();
+               targetFi = calcAngle(x,y,targetX,targetY);
+               angleDistFormating();
+
                // lD4R.minDist = copyOfLaserData.Data[k].scanDistance; //dufam ze v mm
                // lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
            }
+           /*
             ///mindist
            if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 600.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 25.0 || fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 25.0 )){
                 lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
@@ -104,6 +115,26 @@ void MainWindow::paintEvent(QPaintEvent *event)
                 lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
                 lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
            }
+        */
+            angleDiff = (fip - targetFi)*180/M_PI;
+            if (angleDiff < 0) angleDiff = 360 + angleDiff;
+
+           ///zistujem prekazku na uhle voci bodu
+           //
+          if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 1000.0) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < fmod(angleDiff + 2,360) ) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) > fmod(angleDiff - 2,360) )){ //+90
+               lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
+               lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
+          }
+           ///zistenie prekazky pre distcritL
+          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistL && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -15,360)) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff - 16,360)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){ // +90
+               lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
+               lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
+          }
+           ///zistenie prekazky pre distcritR
+          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistR && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +16,360)) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff + 15,360)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){ //+90
+               lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
+               lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
+          } // 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) > angleDiff && 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) < angleDiff +1)
 
             ///TODO: najst najkratsi distance
             /// zistit ci to vracia uhly zvladom na robot alebo na co - vzhladom na robot
@@ -138,8 +169,9 @@ void MainWindow::paintEvent(QPaintEvent *event)
             lD4R.minPoint = TRUE;
         }else lD4R.minPoint = FALSE;
 
+           cout << "targetFi:  " << targetFi*180/M_PI << "  fip:  " << fip*180/M_PI  << "  angleDiff:  " << angleDiff << "  minDist:  " << lD4R.minDist << "  minAngle:  " << fmod(lD4R.minAngle*180/M_PI,360)  << endl;
 
-        /// vykreslenie bodu mindist v smere robota
+        /// vykreslenie bodu mindist
         int dist=lD4R.minDist/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
         int xp=rect.width()-(rect.width()/
                          2+dist*2*sin((360.0-lD4R.minAngle)*3.14159/180.0))+rect.topLeft().x();
@@ -155,7 +187,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
                          2+distL*2*sin((360.0-lD4R.AngleL)*3.14159/180.0))+rect.topLeft().x();
         int ypL=rect.height()-(rect.height()/2+distL*2*cos((360.0-lD4R.AngleL)*3.14159/180.0))+rect.topLeft().y();
         if(rect.contains(xpL,ypL))
-            painter.setPen(pero2);
+            painter.setPen(pero4);
             painter.drawEllipse(QPoint(rect.height() - xpL, ypL),4,4);//vykreslime kruh s polomerom 2px
 
         /// vykreslenie bodu distRcrit
@@ -164,7 +196,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
                          2+distR*2*sin((360.0-lD4R.AngleR)*3.14159/180.0))+rect.topLeft().x();
         int ypR=rect.height()-(rect.height()/2+distR*2*cos((360.0-lD4R.AngleR)*3.14159/180.0))+rect.topLeft().y();
         if(rect.contains(xpR,ypR))
-            painter.setPen(pero2);
+            painter.setPen(pero4);
             painter.drawEllipse(QPoint(rect.height() - xpR, ypR),4,4);//vykreslime kruh s polomerom 2px
 
         /// vykreslenie bodu maxdistL
@@ -212,7 +244,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 }
 
 double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
-    double result =sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+   return (double)sqrt(pow(x2-x1,2)+pow(y2-y1,2));
 }
 
 bool MainWindow::loadTargetCoord(){
@@ -280,6 +312,104 @@ void MainWindow::rotateRobot(){
   /* if(angleErr > 0) on_pushButton_6_clicked(); // Right
            else on_pushButton_5_clicked();  // Left*/
     on_pushButton_6_clicked(); //left
+}
+
+///treba zadefinnovat v headery
+bool MainWindow::isPathBlocked(double angleToTarget){
+
+    for(int k=0;k<copyOfLaserData.numberOfScans;k++)
+    {
+        ///initials
+        if(k == 0){
+             lD4R.minDist = HUGE_VAL;
+             lD4R.minAngle = HUGE_VAL;
+             lD4R.DistL = HUGE_VAL;
+             lD4R.AngleL = HUGE_VAL;
+             lD4R.DistR = HUGE_VAL;
+             lD4R.AngleR = HUGE_VAL;
+
+
+        }
+         ///zistujem prekazku na uhle voci bodu
+        if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 600.0 ) && (fmod(copyOfLaserData.Data[k].scanAngle + 90 ,360.0) < angleToTarget + 5 ) && (fmod(copyOfLaserData.Data[k].scanAngle + 90,360.0) > angleToTarget -5)){
+             lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
+             lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
+        }
+         ///zistenie prekazky pre distcritL
+        if((fmod(copyOfLaserData.Data[k].scanAngle + 90 ,360.0) > angleToTarget + 45 ) && (fmod(copyOfLaserData.Data[k].scanAngle + 90 ,360.0) < angleToTarget + 46  ) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){
+             lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
+             lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
+        }
+         ///zistenie prekazky pre distcritR
+        if((fmod(copyOfLaserData.Data[k].scanAngle + 90 ,360.0) < angleToTarget - 45 ) && (fmod(copyOfLaserData.Data[k].scanAngle + 90 ,360.0) > angleToTarget - 46  ) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){
+             lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
+             lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
+        }
+
+     }
+
+        /// vypocet svetovych suradnic bodu
+        if(!isinf(lD4R.minDist) && !isinf(lD4R.minAngle)){
+            //lD4R.forminAngle = fmod((lD4R.minAngle*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            //lD4R.minX = x + ((lD4R.minDist/1000.0)*cos(lD4R.forminAngle));
+            //lD4R.minY = y + ((lD4R.minDist/1000.0)*sin(lD4R.forminAngle));
+            lD4R.minPoint = TRUE;
+        }else lD4R.minPoint = FALSE;
+
+        if(!isinf(lD4R.DistL) && !isinf(lD4R.AngleL)){
+            //lD4R.forminAngle = fmod((lD4R.minAngle*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            //lD4R.minX = x + ((lD4R.minDist/1000.0)*cos(lD4R.forminAngle));
+            //lD4R.minY = y + ((lD4R.minDist/1000.0)*sin(lD4R.forminAngle));
+            lD4R.minPointL = TRUE;
+        }else lD4R.minPointL = FALSE;
+
+        if(!isinf(lD4R.DistR) && !isinf(lD4R.AngleR)){
+            //lD4R.forminAngle = fmod((lD4R.minAngle*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            //lD4R.minX = x + ((lD4R.minDist/1000.0)*cos(lD4R.forminAngle));
+            //lD4R.minY = y + ((lD4R.minDist/1000.0)*sin(lD4R.forminAngle));
+            lD4R.minPointR = TRUE;
+        }else lD4R.minPointR = FALSE;
+
+    if(lD4R.minPoint || lD4R.minPointL || lD4R.minPointR)
+        return TRUE;
+    else return FALSE;
+}
+
+void MainWindow::wallDetection(){
+    ///1. ak som zadal ciel vykonaj sa
+    ///2. pozri sa ci je prekazka keby sa robot natoci na uhol zvierany s cielom
+    ///3. ak je prekazka skontroluj kraje/konce a vyrataj euklidovsku vzdialenost s cielom cez tieto body
+    ///4. rozhodni sa pre kratsiu vzdialenost -> zober x a y pre dany koncovy bod + dalsia vzdialenost ->
+    /// -> ak je uhol s krajnym bodom mensi ako 180 suradnice hrany + bezpecna vzdialenost * sin/cos(zvierany uhol + 90)
+    /// -> inak bezpecna vzdialenost * sin/cos(zvierany uhol - 90)
+    /// zapamataj si vzdialenost s cielom  a chod na bod ak pocas chodu bude vzdialenost vacsia ako zapamatana rezim sledovania steny
+    /// 5. ak sledujem stenu tak ju sledujem dokial nie je vzdialenost mensia ako zapamatana
+
+    if(wallDetectionState){
+        /// pozmenit do go on button
+
+        /*if(isPathBlocked(targetFi)){
+            /// zdetegoval som prekazku pred sebou
+            /// spravit ako funkciu ktorej dam aktualny uhol
+
+
+
+
+        else{
+            wallDetectionState = FALSE;
+            startState = TRUE;
+        }
+
+*/
+    }
+
+}
+
+void MainWindow::wallFollowing(){
+
+
+
+
 }
 
 void MainWindow::angleDistFormating(){

@@ -70,6 +70,11 @@ typedef struct {
     bool maxPointR;
 }LidarData4Reg;
 
+typedef struct {
+    double minDist2Target;
+
+}WallFollowData;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -85,8 +90,11 @@ public:
     double twoPoitDistance(double x1, double y1, double x2, double y2);
     double calcAngle(double x1, double y1, double x2, double y2);
     void rotateRobot();
+    bool isPathBlocked(double angleToTarget);
     void angleDistFormating();
     void angleDistRegulator();
+    void wallDetection();
+    void wallFollowing();
 
     void processThisRobot();
     pthread_t robotthreadHandle; // handle na vlakno
@@ -165,6 +173,8 @@ private:
      bool startState = FALSE;
      bool rotateState = FALSE;
      bool translateState = FALSE;
+     bool wallFollowState = FALSE;
+     bool wallDetectionState = FALSE;
      double desiredAngle = 0;
      double desiredDistance = 0;
      double robotDistance = 0;
