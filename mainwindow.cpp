@@ -404,7 +404,7 @@ void MainWindow::fillMap(double distance, double angle){
 
      angle = fmod((angle*M_PI/180) + fip,(2.0*M_PI)); //uhol bodu voci svetovemu suradnicovemu systemu
 
-    if(!((distance >= 1500.0) || (distance == 0.0))){
+    if((distance <= 1500.0) && (distance != 0.0)){
         xm = (int)((((x+1)*1000.0) + (distance*cos(angle)))/40.0);
         ym = (int)((((y+1)*1000.0) + (distance*sin(angle)))/40.0);
        // cout << "xm:  " << xm << "  ym:  " << ym <<endl;
@@ -700,6 +700,11 @@ void MainWindow::processThisRobot()
     cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
     cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
 */
+   if(datacounter==100) {
+       createMap();
+       cout << "mapa nulovana!" << endl;
+    }
+
     ///kazdy 300ty cyklus sa zapisu data mapy do suboru map.txt
    if(datacounter%300 == 0){
         //cout<< "zapisujem mapu" <<endl;
