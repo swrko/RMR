@@ -21,7 +21,9 @@ MainWindow::MainWindow(QWidget *parent) :
     datacounter=0;
     lD4R.minDcrit = robotshell.Diameter;
     lD4R.DcritR = lD4R.DcritL = 2.5*robotshell.Diameter/(sin(45.0));
-
+    cout << "vytvaram mapu" << endl;
+    createMap();
+    cout << "mapa vytvorena" << endl;
 }
 
 MainWindow::~MainWindow()
@@ -70,13 +72,14 @@ void MainWindow::paintEvent(QPaintEvent *event)
         mutex.lock();//lock.. idem robit s premennou ktoru ine vlakno moze prepisovat...
         updateLaserPicture=0;
         double  angleDiff;
-
+        // upravit kod nech to vyzera krajsie
         painter.setPen(pero);
         ///teraz sa tu kreslia udaje z lidaru. ak chcete, prerobte
         for(int k=0;k<copyOfLaserData.numberOfScans;k++)
         {
-           ///initials
-           if(k == 0){
+
+            ///initials
+            if(k == 0){
                 lD4R.minDist = HUGE_VAL;
                 lD4R.minAngle = HUGE_VAL;
                 lD4R.DistL = HUGE_VAL;
@@ -95,106 +98,112 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
                // lD4R.minDist = copyOfLaserData.Data[k].scanDistance; //dufam ze v mm
                // lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
-           }
-           ///mindist
-          if (copyOfLaserData.Data[k].scanDistance < lD4R.minDistT && copyOfLaserData.Data[k].scanDistance < 1500.0 ){
-               lD4R.minDistT = copyOfLaserData.Data[k].scanDistance;
-               lD4R.minAngleT = copyOfLaserData.Data[k].scanAngle;
-          }
-           /*
-            ///mindist
-           if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 600.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 25.0 || fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 25.0 )){
-                lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
-                lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
-           }
-            ///distL
-           if(45.0 < fmod(copyOfLaserData.Data[k].scanAngle,360.0) && fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 46.0 && copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL){
-                lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
-                lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
-           }
-            ///distR
-           if(45.0 < 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) && 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 46.0 && copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR){
-                lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
-                lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
-           }
-            ///max dist Left
-           if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 1000.0 ) && (fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 60.0 )){
-                lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
-                lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
-           }
-            ///max dist Right
-           if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 1000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 60.0)){
-                lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
-                lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
-           }
-        */
-            angleDiff = (fip - newTarget.fi)*180/M_PI;
-            if (angleDiff < 0) angleDiff = 360 + angleDiff;
-
-           ///zistujem prekazku na uhle voci bodu
-           //
-          if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 1000.0) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < fmod(angleDiff + 2.0,360.0) ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) > fmod(angleDiff - 2.0,360.0) )){ //+90
-               lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
-               lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
-          }
-           ///zistenie prekazky pre distcritL
-          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistL && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -15.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff - 16.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){ // +90
-               lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
-               lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
-          }
-           ///zistenie prekazky pre distcritR
-          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistR && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +16.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff + 15.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){ //+90
-               lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
-               lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
-          } // 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) > angleDiff && 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) < angleDiff +1)
-
-/*
-          ///max dist Left
-         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 1300.0 ) && (fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 60.0 )){
-              lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
-              lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
-         }
-          ///max dist Right
-         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 1300.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 60.0)){
-              lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
-              lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
-         }
-
- */      ///max dist Left
-         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -1.0 ,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff -55.0 ,360.0))){
-               lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
-               lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
-          }
-         ///max dist Right
-         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +35,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff +1.0,360.0))){
-              lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
-              lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
-          }
-
-            ///TODO: najst najkratsi distance
-            /// zistit ci to vracia uhly zvladom na robot alebo na co - vzhladom na robot
-            ///
-            /// pocitat suradnice tych bodov na svetove done.
-            /// spojit krajne body s najblizsim ciarou
-            /// dodrziavat vzdialenost od steny ak stena stoji v ceste inak ju licovat
-            //tu sa rata z polarnych suradnic na kartezske, a zaroven sa upravuje mierka aby sme sa zmestili do
-            //do vyhradeneho stvorca aspon castou merania.. ale nieje to pekne, krajsie by bolo
-            //keby ste nastavovali mierku tak,aby bolo v okne zobrazene cele meranie (treba najst min a max pre x a y suradnicu a podla toho to prenasobit)
-
-           /// vykreslenie dat lidaru
-            int dist=copyOfLaserData.Data[k].scanDistance/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
-            int xp=rect.width()-(rect.width()/
-                                 2+dist*2*sin((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().x();
-            int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().y();
-            if(rect.contains(xp,yp))
-                painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px
-
-         //   cout<< "mindist:  " << lD4R.minDist << "  DistL:  " << lD4R.DistL << "  DistR:  " << lD4R.DistR << endl;
-          //  cout<< "mindistcrit:  " << lD4R.minDcrit << "  DcritL:  " << lD4R.DcritL << "  DcritR:  " << lD4R.DcritR << endl;
-           //  cout<< "maxDistL:  " << lD4R.maxDistL << "  maxAngleL:  " << fmod(lD4R.maxAngleL,360) << "maxDistR:  " << lD4R.maxDistR << "  maxAngleR:  " << fmod(lD4R.maxAngleR,360) << endl;
-            if(!isinf(lD4R.minX) && !isinf(lD4R.minY))
-                    painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px;
             }
+              ///mindistT -> najblizsi bod nejblizsia stena ktoru potom sledujem
+              if (copyOfLaserData.Data[k].scanDistance < lD4R.minDistT && copyOfLaserData.Data[k].scanDistance < 1500.0 ){
+                   lD4R.minDistT = copyOfLaserData.Data[k].scanDistance;
+                   lD4R.minAngleT = copyOfLaserData.Data[k].scanAngle;
+              }
+               /*
+                ///mindist
+               if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 600.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 25.0 || fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 25.0 )){
+                    lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
+                    lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
+               }
+                ///distL
+               if(45.0 < fmod(copyOfLaserData.Data[k].scanAngle,360.0) && fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 46.0 && copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL){
+                    lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
+                    lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
+               }
+                ///distR
+               if(45.0 < 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) && 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 46.0 && copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR){
+                    lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
+                    lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
+               }
+                ///max dist Left
+               if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 1000.0 ) && (fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 60.0 )){
+                    lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
+                    lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
+               }
+                ///max dist Right
+               if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 1000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 60.0)){
+                    lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
+                    lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
+               }
+            */
+
+              /// formatovanie uhla a detekcia prekazky vzhladom na newTarget z pozicie robota
+              angleDiff = (fip - newTarget.fi)*180/M_PI;
+              if (angleDiff < 0) angleDiff = 360 + angleDiff;
+
+               ///zistujem prekazku na uhle voci bodu
+              if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 1000.0) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < fmod(angleDiff + 2.0,360.0) ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) > fmod(angleDiff - 2.0,360.0) )){ //+90
+                   lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
+                   lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
+              }
+               ///zistenie prekazky pre distcritL
+              if(copyOfLaserData.Data[k].scanDistance < lD4R.DistL && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -15.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff - 16.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){ // +90
+                   lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
+                   lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
+              }
+               ///zistenie prekazky pre distcritR
+              if(copyOfLaserData.Data[k].scanDistance < lD4R.DistR && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +16.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff + 15.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){ //+90
+                   lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
+                   lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
+              } // 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) > angleDiff && 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) < angleDiff +1)
+
+    /*
+              ///max dist Left
+             if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 1300.0 ) && (fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 60.0 )){
+                  lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
+                  lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
+             }
+              ///max dist Right
+             if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 1300.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 60.0)){
+                  lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
+                  lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
+             }
+
+     */      ///max dist Left
+             if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -1.0 ,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff -55.0 ,360.0))){
+                   lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
+                   lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
+              }
+             ///max dist Right
+             if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +35,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff +1.0,360.0))){
+                  lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
+                  lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
+              }
+
+                /*
+                ///TODO: najst najkratsi distance
+                /// zistit ci to vracia uhly zvladom na robot alebo na co - vzhladom na robot
+                ///
+                /// pocitat suradnice tych bodov na svetove done.
+                /// spojit krajne body s najblizsim ciarou
+                /// dodrziavat vzdialenost od steny ak stena stoji v ceste inak ju licovat
+                //tu sa rata z polarnych suradnic na kartezske, a zaroven sa upravuje mierka aby sme sa zmestili do
+                //do vyhradeneho stvorca aspon castou merania.. ale nieje to pekne, krajsie by bolo
+                //keby ste nastavovali mierku tak,aby bolo v okne zobrazene cele meranie (treba najst min a max pre x a y suradnicu a podla toho to prenasobit)
+                */
+
+               /// vykreslenie dat lidaru
+                int dist=copyOfLaserData.Data[k].scanDistance/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
+                int xp=rect.width()-(rect.width()/
+                                     2+dist*2*sin((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().x();
+                int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-copyOfLaserData.Data[k].scanAngle)*3.14159/180.0))+rect.topLeft().y();
+                if(rect.contains(xp,yp))
+                    painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px
+
+               // cout<< "mindist:  " << lD4R.minDist << "  DistL:  " << lD4R.DistL << "  DistR:  " << lD4R.DistR << endl;
+               // cout<< "mindistcrit:  " << lD4R.minDcrit << "  DcritL:  " << lD4R.DcritL << "  DcritR:  " << lD4R.DcritR << endl;
+               // cout<< "maxDistL:  " << lD4R.maxDistL << "  maxAngleL:  " << fmod(lD4R.maxAngleL,360) << "maxDistR:  " << lD4R.maxDistR << "  maxAngleR:  " << fmod(lD4R.maxAngleR,360) << endl;
+                if(!isinf(lD4R.minX) && !isinf(lD4R.minY))
+                        painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px;
+
+               fillMap(copyOfLaserData.Data[k].scanDistance,copyOfLaserData.Data[k].scanAngle);
+        }
+              //  cout << " mapa uspesne naplnena" << endl;
 
         /// vypocet svetovych suradnic bodu minDistT
         if(!isinf(lD4R.minDistT) && !isinf(lD4R.minAngleT)){
@@ -220,7 +229,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
             lD4R.minPointL = TRUE;
         }else lD4R.minPointL = FALSE;
 
-        /// vypocet svetovych suradnic bodu
+        /// vypocet svetovych suradnic bodu DistR
         if(!isinf(lD4R.DistR) && !isinf(lD4R.AngleR)){
             lD4R.formAngleR = fmod((lD4R.AngleR*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
             lD4R.XR = x + ((lD4R.DistR/1000.0)*cos(lD4R.formAngleR));
@@ -238,7 +247,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
         if(rect.contains(xp,yp))
             painter.setPen(pero2);
             painter.drawEllipse(QPoint(rect.height() - xp, yp),4,4);//vykreslime kruh s polomerom 2px
-
 
         /// vykreslenie bodu distLcrit
         int distL=lD4R.DistL/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
@@ -381,6 +389,43 @@ void MainWindow::rotateRobot(){
     on_pushButton_6_clicked(); //left
 }
 
+void MainWindow::createMap(){
+    for(int i = 0; i< mapData.mapsize;i++){
+        for(int j = 0; j<mapData.mapsize; j++){
+
+            mapData.map[i][j] = 0;
+        }
+    }
+}
+
+void MainWindow::fillMap(double distance, double angle){
+     int xm,ym;
+     int ofset = mapData.mapsize /2;
+
+     angle = fmod((angle*M_PI/180) + fip,(2.0*M_PI)); //uhol bodu voci svetovemu suradnicovemu systemu
+
+    if(!((distance >= 1500.0) || (distance == 0.0))){
+        xm = (int)((((x+1)*1000.0) + (distance*cos(angle)))/40.0);
+        ym = (int)((((y+1)*1000.0) + (distance*sin(angle)))/40.0);
+       // cout << "xm:  " << xm << "  ym:  " << ym <<endl;
+       // cout << "angle:  " << angle;
+       // cout << "distX:  " << (distance*cos(angle))/30 << "  distY:  " << (distance*cos(angle))/30  << endl;
+        mapData.map[xm+ofset][ym+ofset] = 1;
+    }
+}
+
+void MainWindow::writeMap(){
+    ofstream file;
+    file.open("map.txt", ios::trunc);
+    for(int i=0; i<mapData.mapsize; i++){
+       // if(!(i==0)) file<<endl;
+        file << endl;
+        for(int j=0; j<mapData.mapsize; j++){
+            file<<mapData.map[i][j];
+        }
+    }
+    file.close();
+}
 
 bool MainWindow::isPathBlocked(){
 
@@ -649,11 +694,18 @@ void MainWindow::processThisRobot()
     encDiff();
     navigation();
     angleDistFormating();
-
+/*
     cout<< "targetx:  " << newTarget.x << "  targety:  " << newTarget.y << endl;
     cout<< "targetfi:  " << newTarget.fi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<newTarget.dist << endl;
     cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
     cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
+*/
+    ///kazdy 300ty cyklus sa zapisu data mapy do suboru map.txt
+   if(datacounter%300 == 0){
+        //cout<< "zapisujem mapu" <<endl;
+        writeMap();
+        //cout<< "mapa zapisana" << endl;
+    }
 
     if(datacounter%2 == 0){
         angleDistRegulator();
@@ -948,6 +1000,7 @@ void MainWindow::robotprocess()
 
     }
 }
+
 
 
 

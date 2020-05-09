@@ -85,6 +85,13 @@ typedef struct{
     double dist;
 }worldPoint;
 
+
+typedef struct{
+    int mapsize = 320;
+    int map[320][320];
+}MapType;
+
+
 typedef struct {
     double minDist2Target;
 
@@ -100,21 +107,29 @@ public:
     void robotprocess();
     void laserprocess();
     void processThisLidar(LaserMeasurement &laserData);
-    void encDiff(); //dorobena
+    void encDiff();
     void navigation();
+
+    void createMap();
+    void fillMap(double distance, double angle);
+    void writeMap();
+
     worldPoint loadTargetCoord();
     worldPoint setPoint(double x, double y);
+    worldPoint findSecurePoint(double edgePointX, double edgePointY);
+
     double twoPoitDistance(double x1, double y1, double x2, double y2);
     double calcAngle(double x1, double y1, double x2, double y2);
     void rotateRobot();
     void goToTarget();
     bool isPathBlocked();
-    worldPoint findSecurePoint(double edgePointX, double edgePointY);
     double angleFormating(double fi);
     void angleDistFormating();
     void angleDistRegulator();
     void wallDetection();
     void wallFollowing();
+
+
 
     void processThisRobot();
     pthread_t robotthreadHandle; // handle na vlakno
@@ -145,6 +160,7 @@ public:
 
 
     QMutex mutex;
+
 private slots:
     void on_pushButton_12_clicked();
 
@@ -174,20 +190,10 @@ private:
      CKobuki robot;
      TKobukiData robotdata;
      TShellData robotshell;
+     MapType mapData;
      int datacounter;
-     double pEncL;
-     double pEncR;
-     double startEncL;
-     double startEncR;
-     double distanceL;
-     double distanceR;
-     double pDistanceL;
-     double pDistanceR;
-     double fi;
-     double fip = 0.0;
-     double pFi;
-     double x;
-     double y;
+     double pEncL,pEncR,startEncL,startEncR,distanceL,distanceR,pDistanceL,pDistanceR;
+     double fi,pFi,x,y,fip = 0.0;
      bool startState = FALSE;
      bool rotateState = FALSE;
      bool translateState = FALSE;
