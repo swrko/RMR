@@ -68,6 +68,13 @@ typedef struct {
     bool minPointR;
     bool maxPointL;
     bool maxPointR;
+
+    double minDistT;
+    double minAngleT;
+    double forminAngleT;
+    double minXT;
+    double minYT;
+    double minPointT;
 }LidarData4Reg;
 
 
@@ -94,11 +101,16 @@ public:
     void laserprocess();
     void processThisLidar(LaserMeasurement &laserData);
     void encDiff(); //dorobena
-    worldPoint loadTargetCoord(worldPoint target);
+    void navigation();
+    worldPoint loadTargetCoord();
+    worldPoint setPoint(double x, double y);
     double twoPoitDistance(double x1, double y1, double x2, double y2);
     double calcAngle(double x1, double y1, double x2, double y2);
     void rotateRobot();
-    bool isPathBlocked(double angleToTarget);
+    void goToTarget();
+    bool isPathBlocked();
+    worldPoint findSecurePoint(double edgePointX, double edgePointY);
+    double angleFormating(double fi);
     void angleDistFormating();
     void angleDistRegulator();
     void wallDetection();
@@ -134,6 +146,8 @@ public:
 
     QMutex mutex;
 private slots:
+    void on_pushButton_12_clicked();
+
     void on_pushButton_11_clicked();
 
     void on_pushButton_10_clicked();
@@ -170,7 +184,7 @@ private:
      double pDistanceL;
      double pDistanceR;
      double fi;
-     double fip = 0;
+     double fip = 0.0;
      double pFi;
      double x;
      double y;
@@ -179,10 +193,13 @@ private:
      bool translateState = FALSE;
      bool wallFollowState = FALSE;
      bool wallDetectionState = FALSE;
-     double desiredAngle = 0;
-     double desiredDistance = 0;
-     double robotDistance = 0;
-     double angleErr = 0;
+     bool navigationState = FALSE;
+     bool changedTargetState = FALSE;
+     double shortestDistance = 0.0;
+     double desiredAngle = 0.0;
+     double desiredDistance = 0.0;
+     double robotDistance = 0.0;
+     double angleErr = 0.0;
      Signal mysig;
      Regstruct regData;
      worldPoint newTarget;

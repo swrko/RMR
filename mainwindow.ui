@@ -196,6 +196,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButton_12">
+        <property name="text">
+         <string>navigate</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushButton_11">
         <property name="text">
          <string>Stop</string>

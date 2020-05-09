@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     datacounter=0;
     lD4R.minDcrit = robotshell.Diameter;
-    lD4R.DcritR = lD4R.DcritL = 3*robotshell.Diameter/(sin(45.0));
+    lD4R.DcritR = lD4R.DcritL = 2.5*robotshell.Diameter/(sin(45.0));
 
 }
 
@@ -35,7 +35,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     ///prekreslujem lidar len vtedy, ked viem ze mam nove data. paintevent sa
     /// moze pochopitelne zavolat aj z inych dovodov, napriklad zmena velkosti okna
     painter.setBrush(Qt::black);//cierna farba pozadia(pouziva sa ako fill pre napriklad funkciu drawRect)
-    QPen pero,pero2,pero3,pero4;
+    QPen pero,pero2,pero3,pero4,pero5;
 
     pero.setStyle(Qt::SolidLine); //styl pera - plna ciara
     pero.setWidth(3);//hrubka pera -3pixely
@@ -52,6 +52,11 @@ void MainWindow::paintEvent(QPaintEvent *event)
     pero4.setStyle(Qt::SolidLine); //styl pera - plna ciara
     pero4.setWidth(3);//hrubka pera -3pixely
     pero4.setColor(Qt::yellow);//farba je zlta
+
+    pero5.setStyle(Qt::SolidLine); //styl pera - plna ciara
+    pero5.setWidth(3);//hrubka pera -3pixely
+    pero5.setColor(Qt::cyan);//farba je bledo modra
+
 
     QRect rect;//(20,120,700,500);
     rect= ui->frame->geometry();//ziskate porametre stvorca,do ktoreho chcete kreslit
@@ -82,13 +87,20 @@ void MainWindow::paintEvent(QPaintEvent *event)
                 lD4R.maxAngleL = -HUGE_VAL;
                 lD4R.maxDistR = -HUGE_VAL;
                 lD4R.maxAngleR = -HUGE_VAL;
-                newTarget = loadTargetCoord(newTarget);
+                lD4R.minDistT = HUGE_VAL;
+                lD4R.minAngleT = HUGE_VAL;
+                // newTarget = loadTargetCoord();
                 newTarget.fi= calcAngle(x,y,newTarget.x,newTarget.y);
                 angleDistFormating();
 
                // lD4R.minDist = copyOfLaserData.Data[k].scanDistance; //dufam ze v mm
                // lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
            }
+           ///mindist
+          if (copyOfLaserData.Data[k].scanDistance < lD4R.minDistT && copyOfLaserData.Data[k].scanDistance < 1500.0 ){
+               lD4R.minDistT = copyOfLaserData.Data[k].scanDistance;
+               lD4R.minAngleT = copyOfLaserData.Data[k].scanAngle;
+          }
            /*
             ///mindist
            if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 600.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 25.0 || fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 25.0 )){
@@ -121,20 +133,43 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
            ///zistujem prekazku na uhle voci bodu
            //
-          if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 1000.0) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < fmod(angleDiff + 2,360) ) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) > fmod(angleDiff - 2,360) )){ //+90
+          if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 1000.0) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < fmod(angleDiff + 2.0,360.0) ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) > fmod(angleDiff - 2.0,360.0) )){ //+90
                lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
                lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
           }
            ///zistenie prekazky pre distcritL
-          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistL && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -15,360)) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff - 16,360)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){ // +90
+          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistL && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -15.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff - 16.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){ // +90
                lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
                lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
           }
            ///zistenie prekazky pre distcritR
-          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistR && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +16,360)) && ((360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff + 15,360)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){ //+90
+          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistR && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +16.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff + 15.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){ //+90
                lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
                lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
           } // 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) > angleDiff && 360 - fmod(copyOfLaserData.Data[k].scanAngle,360.0) < angleDiff +1)
+
+/*
+          ///max dist Left
+         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 1300.0 ) && (fmod(copyOfLaserData.Data[k].scanAngle,360.0) < 60.0 )){
+              lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
+              lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
+         }
+          ///max dist Right
+         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 1300.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < 60.0)){
+              lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
+              lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
+         }
+
+ */      ///max dist Left
+         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -1.0 ,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff -55.0 ,360.0))){
+               lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
+               lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
+          }
+         ///max dist Right
+         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +35,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff +1.0,360.0))){
+              lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
+              lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
+          }
 
             ///TODO: najst najkratsi distance
             /// zistit ci to vracia uhly zvladom na robot alebo na co - vzhladom na robot
@@ -160,6 +195,14 @@ void MainWindow::paintEvent(QPaintEvent *event)
             if(!isinf(lD4R.minX) && !isinf(lD4R.minY))
                     painter.drawEllipse(QPoint(rect.height() - xp, yp),2,2);//vykreslime kruh s polomerom 2px;
             }
+
+        /// vypocet svetovych suradnic bodu minDistT
+        if(!isinf(lD4R.minDistT) && !isinf(lD4R.minAngleT)){
+            lD4R.forminAngleT = fmod((lD4R.minAngleT*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            lD4R.minXT = x + ((lD4R.minDistT/1000.0)*cos(lD4R.forminAngleT));
+            lD4R.minYT = y + ((lD4R.minDistT/1000.0)*sin(lD4R.forminAngleT));
+            lD4R.minPointT = TRUE;
+        }else lD4R.minPointT = FALSE;
 
         /// vypocet svetovych suradnic bodu minDist
         if(!isinf(lD4R.minDist) && !isinf(lD4R.minAngle)){
@@ -230,7 +273,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
                          2+maxdistr*2*sin((360.0-lD4R.maxAngleR)*3.14159/180.0))+rect.topLeft().x();
         int maypr=rect.height()-(rect.height()/2+maxdistr*2*cos((360.0-lD4R.maxAngleR)*3.14159/180.0))+rect.topLeft().y();
         if(rect.contains(maxpr,maypr))
-            painter.setPen(pero3);
+            painter.setPen(pero5);
             painter.drawEllipse(QPoint(rect.height() - maxpr, maypr),4,4);//vykreslime kruh s polomerom 2px
 
         /// vypocet svetovych suradnic bodu maxL (kraj steny lavy)
@@ -263,7 +306,15 @@ double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
    return (double)sqrt(pow(x2-x1,2)+pow(y2-y1,2));
 }
 
-worldPoint MainWindow::loadTargetCoord(worldPoint target){
+worldPoint MainWindow::setPoint(double x,double y){
+    worldPoint point;
+    point.x = x;
+    point.y = y;
+    return point;
+}
+
+worldPoint MainWindow::loadTargetCoord(){
+    worldPoint target;
     target.x = ui->lineEdit_11->text().toDouble();
     target.y = ui->lineEdit_12->text().toDouble();
     return target;
@@ -330,10 +381,10 @@ void MainWindow::rotateRobot(){
     on_pushButton_6_clicked(); //left
 }
 
-///treba zadefinnovat v headery
-bool MainWindow::isPathBlocked(double angleToTarget){
 
-    for(int k=0;k<copyOfLaserData.numberOfScans;k++)
+bool MainWindow::isPathBlocked(){
+
+   /* for(int k=0;k<copyOfLaserData.numberOfScans;k++)
     {
         ///initials
         if(k == 0){
@@ -385,10 +436,96 @@ bool MainWindow::isPathBlocked(double angleToTarget){
             //lD4R.minY = y + ((lD4R.minDist/1000.0)*sin(lD4R.forminAngle));
             lD4R.minPointR = TRUE;
         }else lD4R.minPointR = FALSE;
+        */
 
-    if(lD4R.minPoint || lD4R.minPointL || lD4R.minPointR)
+    ///  ak su aspon dva body pritomne tak je prekazka
+    ///
+    if((lD4R.minPoint && lD4R.minPointL) || (lD4R.minPoint && lD4R.minPointR) || (lD4R.minPointL && lD4R.minPointR))
         return TRUE;
     else return FALSE;
+}
+
+worldPoint MainWindow::findSecurePoint(double edgePointX, double edgePointY){
+
+    worldPoint securepoint;
+    double securedistance = 300.0;   //bulharska konstanta +- priemer robota
+
+    securepoint.fi = calcAngle(x,y,edgePointX,edgePointY);
+    securepoint.fi = angleFormating(securepoint.fi);
+
+    if(securepoint.fi < M_PI){
+        securepoint.x = edgePointX + (securedistance*cos(securepoint.fi +90));
+        securepoint.y = edgePointY + (securedistance*sin(securepoint.fi +90));
+    }else{
+        securepoint.x = edgePointX + (securedistance*cos(securepoint.fi -90));
+        securepoint.y = edgePointY + (securedistance*sin(securepoint.fi -90));
+    }
+return securepoint;
+}
+
+void MainWindow::goToTarget(){
+    startState = TRUE;
+}
+
+void MainWindow::navigation(){
+
+    /// v podstate prva vec ktora sa vykona tu sa rozhodne ci budem sledovat stenu  alebo obchadzam prekazku
+    if(navigationState && !wallDetectionState && !wallFollowState){
+         // toto spravim v tlacidle
+        wallDetectionState = TRUE; wallFollowState = FALSE;
+        changedTargetState = TRUE;
+      /*  if(isPathBlocked()){
+
+            wallDetection();
+            shortestDistance = newTarget.dist;
+            goToTarget();
+        }else{
+            newTarget = finalTarget;
+            goToTarget();
+            navigationState = FALSE;
+        }*/
+    }
+
+    if(navigationState && wallDetectionState && !startState){
+        if(!changedTargetState){
+            newTarget = finalTarget;
+            changedTargetState = TRUE;
+        }else{
+            if(isPathBlocked()){
+                wallDetection(); // meni target
+                shortestDistance = twoPoitDistance(x,y,finalTarget.x,finalTarget.y);
+                goToTarget();
+            }else{
+                newTarget = finalTarget;
+                goToTarget();
+                navigationState = FALSE; wallDetectionState = FALSE; wallFollowState = FALSE;
+            }
+            changedTargetState = FALSE;
+        }
+
+    }
+
+    if(navigationState && wallFollowState && !startState){
+        if (!changedTargetState){
+            newTarget = setPoint(lD4R.minXT,lD4R.minYT);
+            changedTargetState = TRUE;
+        }else{
+            wallFollowing();
+            goToTarget();
+            changedTargetState = FALSE;
+        }
+    }
+
+    if(twoPoitDistance(x,y,finalTarget.x,finalTarget.y) > shortestDistance && !startState && navigationState && !changedTargetState){
+            wallFollowState = TRUE;
+            wallDetectionState = FALSE;
+    }else{
+            wallFollowState = FALSE;
+            wallDetectionState = TRUE;
+    }
+
+
+
 }
 
 void MainWindow::wallDetection(){
@@ -401,31 +538,53 @@ void MainWindow::wallDetection(){
     /// zapamataj si vzdialenost s cielom  a chod na bod ak pocas chodu bude vzdialenost vacsia ako zapamatana rezim sledovania steny
     /// 5. ak sledujem stenu tak ju sledujem dokial nie je vzdialenost mensia ako zapamatana
 
-    if(wallDetectionState){
         /// pozmenit do go on button
 
-        /*if(isPathBlocked(targetFi)){
-            /// zdetegoval som prekazku pred sebou
-            /// spravit ako funkciu ktorej dam aktualny uhol
+        /// dva body, pre kazdy vyratat secure suradnice -> funkcia findSecurePoint
+        worldPoint leftsecurePoint,rightsecurePoint;
 
-
-
-
-        else{
-            wallDetectionState = FALSE;
-            startState = TRUE;
+        if(lD4R.maxPointL){
+          leftsecurePoint = findSecurePoint(lD4R.maxXL,lD4R.maxYL);
+          leftsecurePoint.dist = twoPoitDistance(x,y,leftsecurePoint.x,leftsecurePoint.y) + twoPoitDistance(leftsecurePoint.x,leftsecurePoint.y,finalTarget.x,finalTarget.y);
         }
-
-*/
+        if(lD4R.maxPointR){
+          rightsecurePoint = findSecurePoint(lD4R.maxXR,lD4R.maxYR);
+          rightsecurePoint.dist = twoPoitDistance(x,y,rightsecurePoint.x,rightsecurePoint.y) + twoPoitDistance(rightsecurePoint.x,rightsecurePoint.y,finalTarget.x,finalTarget.y);
+        }
+        ///vyratat euklidovsku vzdialenost pre (krajne body + bezpecna vzdialenost)
+        if(lD4R.maxPointL){
+           if(lD4R.maxPointR){
+               if(leftsecurePoint.dist > rightsecurePoint.dist) newTarget = rightsecurePoint;
+               else newTarget = leftsecurePoint;
+           }else newTarget = leftsecurePoint;
+        }else if(lD4R.maxPointR) newTarget = rightsecurePoint;
+               else {
+                        cout << " cannot find edge point and giving up" << endl;
+                        navigationState = FALSE;
+                    }
     }
+
+void MainWindow::wallFollowing(){
+    worldPoint leftsecurePoint;
+
+
+    if(lD4R.maxPointL) leftsecurePoint = findSecurePoint(lD4R.maxXL,lD4R.maxYL);
+
+    if(lD4R.maxPointL) newTarget = leftsecurePoint;
+    else {
+        cout << " cannot find edge point and giving up" << endl;
+        navigationState = FALSE;
+    }
+
 
 }
 
-void MainWindow::wallFollowing(){
+double MainWindow::angleFormating(double fi){
 
-
-
-
+    if(fi>0.0) fi = (2*M_PI) - fi;
+    else fi = - fi;
+    fi = fmod(fi+M_PI_2,(2*M_PI));
+    return fi;
 }
 
 void MainWindow::angleDistFormating(){
@@ -488,13 +647,13 @@ void MainWindow::angleDistRegulator(){
 void MainWindow::processThisRobot()
 {
     encDiff();
+    navigation();
     angleDistFormating();
 
     cout<< "targetx:  " << newTarget.x << "  targety:  " << newTarget.y << endl;
     cout<< "targetfi:  " << newTarget.fi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<newTarget.dist << endl;
     cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
     cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
-
 
     if(datacounter%2 == 0){
         angleDistRegulator();
@@ -570,6 +729,14 @@ void  MainWindow::setUiValues(Signal sig)
 
 }
 
+void MainWindow::on_pushButton_12_clicked() // navigate
+{
+    finalTarget = loadTargetCoord();
+    startState = FALSE;
+    navigationState = TRUE;
+
+}
+
 void MainWindow::on_pushButton_11_clicked() //stop stop
 {
     startState = FALSE;
@@ -583,7 +750,7 @@ void MainWindow::on_pushButton_11_clicked() //stop stop
 
 void MainWindow::on_pushButton_10_clicked() //go on!
 {
-
+        newTarget = loadTargetCoord();
         newTarget.dist = twoPoitDistance(x,y,newTarget.x,newTarget.y);
         newTarget.fi = calcAngle(x,y,newTarget.x,newTarget.y);
        // cout << "targetX: "<< "  "<< targetX << "targetY: " << "  "<< targetY << "targetDist: " << "  " << targetDist << "targetFi: " << "  " << targetFi << endl;
@@ -603,7 +770,7 @@ void MainWindow::on_pushButton_9_clicked() //start button
   mysig.startL = startEncL = robotdata.EncoderLeft;
   mysig.startR = startEncR = robotdata.EncoderRight;
   x=y=0.0; fi=pFi=M_PI_2;  // 90 stupnov
-  newTarget = loadTargetCoord(newTarget);
+  newTarget = loadTargetCoord();
 }
 
 void MainWindow::on_pushButton_2_clicked() //forward

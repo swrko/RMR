@@ -22,7 +22,7 @@ static const uint qt_meta_data_MainWindow[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+      11,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -36,18 +36,20 @@ static const uint qt_meta_data_MainWindow[] = {
       43,   11,   11,   11, 0x08,
       70,   11,   11,   11, 0x08,
       97,   11,   11,   11, 0x08,
-     123,   11,   11,   11, 0x08,
-     149,   11,   11,   11, 0x08,
-     175,   11,   11,   11, 0x08,
-     201,   11,   11,   11, 0x08,
-     227,   11,   11,   11, 0x08,
-     257,  253,   11,   11, 0x0a,
+     124,   11,   11,   11, 0x08,
+     150,   11,   11,   11, 0x08,
+     176,   11,   11,   11, 0x08,
+     202,   11,   11,   11, 0x08,
+     228,   11,   11,   11, 0x08,
+     254,   11,   11,   11, 0x08,
+     284,  280,   11,   11, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_MainWindow[] = {
     "MainWindow\0\0newsig\0uiValuesChanged(Signal)\0"
+    "on_pushButton_12_clicked()\0"
     "on_pushButton_11_clicked()\0"
     "on_pushButton_10_clicked()\0"
     "on_pushButton_9_clicked()\0"
@@ -66,15 +68,16 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         MainWindow *_t = static_cast<MainWindow *>(_o);
         switch (_id) {
         case 0: _t->uiValuesChanged((*reinterpret_cast< Signal(*)>(_a[1]))); break;
-        case 1: _t->on_pushButton_11_clicked(); break;
-        case 2: _t->on_pushButton_10_clicked(); break;
-        case 3: _t->on_pushButton_9_clicked(); break;
-        case 4: _t->on_pushButton_2_clicked(); break;
-        case 5: _t->on_pushButton_3_clicked(); break;
-        case 6: _t->on_pushButton_6_clicked(); break;
-        case 7: _t->on_pushButton_5_clicked(); break;
-        case 8: _t->on_pushButton_4_clicked(); break;
-        case 9: _t->setUiValues((*reinterpret_cast< Signal(*)>(_a[1]))); break;
+        case 1: _t->on_pushButton_12_clicked(); break;
+        case 2: _t->on_pushButton_11_clicked(); break;
+        case 3: _t->on_pushButton_10_clicked(); break;
+        case 4: _t->on_pushButton_9_clicked(); break;
+        case 5: _t->on_pushButton_2_clicked(); break;
+        case 6: _t->on_pushButton_3_clicked(); break;
+        case 7: _t->on_pushButton_6_clicked(); break;
+        case 8: _t->on_pushButton_5_clicked(); break;
+        case 9: _t->on_pushButton_4_clicked(); break;
+        case 10: _t->setUiValues((*reinterpret_cast< Signal(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -112,9 +115,9 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     return _id;
 }
