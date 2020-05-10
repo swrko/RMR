@@ -93,6 +93,7 @@ typedef struct{
 typedef struct{
     int x;
     int y;
+    int value;
 }MapPoint;
 
 
@@ -128,8 +129,8 @@ public:
     MapType secureMap(MapType origmap);
     void fillInitPoint2Map(double xs, double ys);
     worldPoint mapCoord2World( int xm, int ym);
-    MapPoint worldCoord2map(worldPoint point);
-    void floodMap();
+    MapPoint worldCoord2map(double xm, double ym);
+    MapType floodMap();
     void floodAlgoritm();
     MapType loadRectMap(string filename);
     MapType createMap(MapType map);
@@ -138,6 +139,7 @@ public:
 
     worldPoint loadTargetCoord();
     worldPoint setPoint(double x, double y);
+    MapPoint setPoint(int x,int y,int value);
     worldPoint findSecurePoint(double edgePointX, double edgePointY);
 
     double twoPoitDistance(double x1, double y1, double x2, double y2);

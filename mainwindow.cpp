@@ -29,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
     writeMap(mapData);
     cout << "zapisane" << endl;
    //mapCoord2World(300,301);
+    floodAlgoritm();
+    cout << "zaplavena mapa" <<endl;
+    writeMap(mapData);
+    cout << "zapisana zaplava" <<endl;
 }
 
 MainWindow::~MainWindow()
@@ -341,11 +345,11 @@ MapType MainWindow::secureMap(MapType origmap){
     return copymap;
 }
 
-MapPoint MainWindow::worldCoord2map(worldPoint point){
+MapPoint MainWindow::worldCoord2map(double xm, double ym){
     MapPoint tmpPoint;
     int ofset = mapData.mapsize/2;
-    tmpPoint.x = (int)(point.x*1000.0/40.0);
-    tmpPoint.y = (int)(point.y*1000.0/40.0);
+    tmpPoint.x = (int)(xm*1000.0/40.0);
+    tmpPoint.y = (int)(ym*1000.0/40.0);
 
     tmpPoint.x += ofset;
     tmpPoint.y += ofset;
@@ -418,6 +422,14 @@ void MainWindow::fillInitPoint2Map(double xs, double ys){
 
 }
 
+MapPoint MainWindow::setPoint(int x,int y,int value){
+    MapPoint point;
+    point.x = x;
+    point.y = y;
+    point.value = value;
+    return point;
+}
+
 void MainWindow::fillMap(double distance, double angle){
      int xm,ym;
      int ofset = mapData.mapsize/2;
@@ -448,18 +460,36 @@ void MainWindow::writeMap(MapType map){
 
 }
 
-void MainWindow::floodMap(){
+MapType MainWindow::floodMap(){
         ///4 susednost
         /// nacitat zaciatocny bod >> done
         /// nacitat koncovy bod >> done
         /// vpisat do mapy kazdy jeden z nich >> asi netreba zbytocne listujem mapu
         /// a zacat zaplavovat ->  rekurzivne sa bude volat pre kazdy bod az dokym nebudu naplneny susedia alebo nebudu nenulove prvky
         /// do que hodim  koncovy bod ten zavola na svojich 4 susedov opat ten isty algoritmus ale s incrementom naplnania , vo funkcii sa bude podavat argument naplnania
-   mapData.mfinish = worldCoord2map(mapData.wfinish);
-   mapData.mstart = worldCoord2map(mapData.wstart);
+
+   mapData.mfinish = worldCoord2map(mapData.wfinish.x,mapData.wfinish.y);
+   mapData.mstart = worldCoord2map(mapData.wstart.x,mapData.wstart.y);
+   int smerX[4] = {-1,0,0,1};
+   int smerY[4] = {0,-1,1,0};
+   MapType copymap = mapData;
+   list<MapPoint> points2go;
+   copymap.map[mapData.mstart.x][mapData.mstart.y] = 99;
+   points2go.push_back(mapData.mfinish);
+   points2go.begin()->value = 2;
+   copymap.map[points2go.begin()->x][points2go.begin()->y] = points2go.begin()->value; //koncovy bod
 
 
-
+   while(!points2go.empty()){
+       for(int i=0;i<4;i++){
+           if(copymap.map[(points2go.begin()->x)+smerX[i]][(points2go.begin()->y)+smerY[i]] == 0){ // prehladavam 4 susednost
+                    points2go.push_back(setPoint(points2go.begin()->x + smerX[i], points2go.begin()->y + smerY[i], points2go.begin()->value + 1)); // vlozim novy bod na koniec listu s novymi suradnicami a hodnotou
+                    copymap.map[(points2go.begin()->x)+smerX[i]][(points2go.begin()->y)+smerY[i]] = points2go.begin()->value; //nastavim value zaplavoveho algoritmu v mape
+           }
+       }
+       points2go.pop_front(); // zahodim bod ktory som uz presiel
+   }
+    return copymap;
 }
 
 void MainWindow::floodAlgoritm(){
@@ -470,10 +500,9 @@ void MainWindow::floodAlgoritm(){
         /// naplnit mapu cislami pre susednost zo startovnej pozicie po ciel
         //lmapData = loadRectMap("map4");
         finalTarget = loadTargetCoord();
-        mapData.wfinish = finalTarget;
-        mapData.wstart = setPoint(x,y);
-
-
+        mapData.wfinish = setPoint(4.0,4.0);
+        mapData.wstart = setPoint(x+1,y+1);
+        mapData = floodMap();
 }
 
 double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
