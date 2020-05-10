@@ -509,23 +509,24 @@ MapType MainWindow::floodMap(){
     return copymap;
 }
 
-void MainWindow::findPath(MapType map){
+list<MapPoint> MainWindow::findPath(MapType map){
     ///som na starte prehladavam okolie
     ///ak z okolia < lowwal && >1 - najmensi z prechadzadzanych a nie je to stena
     /// vloz na koniec listu nastav lowsmer
     ///
 
-    int smerX[4] = {0,1,-1,0};
-    int smerY[4] = {1,0,0,-1};
+    int smerY[4] = {0,1,0,-1};
+    int smerX[4] = {-1,0,1,0};
     int psmer = 0;
     int lowval,lowsmer;
     int counter=0;
     list<MapPoint> points2go;
     list<MapPoint> pathPoints;
     MapPoint position = map.mstart;
+    MapPoint pposition;
    //points2go.push_back(map.mstart);
     lowval = HUGEVALINT;
-    while(position.value != map.mfinish.value){
+     while(position.value != map.mfinish.value){
         for(int i=0;i<4;i++){
            if(map.map[(position.x)+smerX[i]][(position.y)+smerY[i]] > 1 && map.map[(position.x+smerX[i])][(position.y +smerY[i])] <lowval){ //ak nie je stena a je najmensi najdeny
                if(!points2go.empty()) points2go.pop_front();    // ak nie je prazny tak ho odstran
@@ -533,37 +534,62 @@ void MainWindow::findPath(MapType map){
                lowval = points2go.begin()->value;// nastav najmensiu hodnotu okolia
                lowsmer = i; // nastav smer
            }
+          // MapPoint debug = setPoint(position.x + smerX[i], position.y +smerY[i], map.map[(position.x+smerX[i])][(position.y +smerY[i])]);
        }
        // posun sa v smere
+
+       pposition = position;
        position.x = points2go.begin()->x;
        position.y = points2go.begin()->y;
        position.value = points2go.begin()->value;
        if(psmer != lowsmer && counter != 0){    // ak sa zmenil smer a nie je to prvy posun
-           pathPoints.push_back(position);  // pridaj uzol
+           pathPoints.push_back(pposition);  // pridaj uzol
            psmer = lowsmer; // nastav novy smer
        }
        counter++;
+       if(position.value == map.mfinish.value) pathPoints.push_back(position);
     }
-    cout<<"nasiel som target" <<endl;
+   // cout<<"nasiel som target" <<endl;
    // cout<<"pocet uzlov:  " << pathPoints.size() << "  count:  " << count << endl;
-    cout << "pocet uzlov:  " <<  pathPoints.size() <<endl;
+   //cout << "pocet uzlov:  " <<  pathPoints.size() <<endl;
+   return pathPoints;
+}
+
+queue<worldPoint> MainWindow::cvrtMapPath2World(list<MapPoint> mappath){
+    queue<worldPoint> wrldpath;
+    int count = 0;
+    while(!mappath.empty()){
+            wrldpath.push(mapCoord2World(mappath.begin()->x,mappath.begin()->y));
+            mappath.pop_front();
+            count++;
+    }
+    //cout << "number of elements converted:  " << count;
+    return wrldpath;
 }
 
 void MainWindow::floodAlgoritm(){
-        /// potrebujem vediet nacitat mapu  >> done
-        /// prepocet mapovych suradnic na svetove a naspat >> done
-        /// vytvorenie zasobnika svetovych suradnic ktory budem vyprazdnovat ako newTarget  >> done  queue <worldPoint> path
-        /// rozsirenie stien prekazok o priemer polomer robota >> done  secureMap
-        /// naplnit mapu cislami pre susednost zo startovnej pozicie po ciel >> done floodMap()
-        /// prehladavanie cesty -> vezmem prvky >1 a zaroven najmensi zo susedov a vlozim do listu
-        ///     nasledne prechadzam cez list v predchadzajucom smere , defaulty smer je podla prveho prvku v liste z najblizsich susedov
-        ///     ak sa nachadza jediny prvok s inym smerom smer sa meni
-        //lmapData = loadRectMap("map4");
-        finalTarget = loadTargetCoord();
-        mapData.wfinish = setPoint(4.0,4.0);
-        mapData.wstart = setPoint(x+1,y+1);
-        mapData = floodMap();
-        findPath(mapData);
+    /// potrebujem vediet nacitat mapu  >> done
+    /// prepocet mapovych suradnic na svetove a naspat >> done
+    /// vytvorenie zasobnika svetovych suradnic ktory budem vyprazdnovat ako newTarget  >> done  queue <worldPoint> path
+    /// rozsirenie stien prekazok o priemer polomer robota >> done  secureMap
+    /// naplnit mapu cislami pre susednost zo startovnej pozicie po ciel >> done floodMap()
+    /// prehladavanie cesty -> vezmem prvky >1 a zaroven najmensi zo susedov a vlozim do listu
+    ///     nasledne prechadzam cez list v predchadzajucom smere , defaulty smer je podla prveho prvku v liste z najblizsich susedov
+    ///     ak sa nachadza jediny prvok s inym smerom smer sa meni  >> done
+    /// list uzlov + ciel  >> donemapPath
+    /// prekonvertovat na suradnice sveta >> done
+    //lmapData = loadRectMap("map4");
+    finalTarget = loadTargetCoord();
+    mapData.wfinish = setPoint(4.0,4.0);
+    mapData.wstart = setPoint(x+1,y+1);
+   /* mapData = floodMap();
+    mappath = findPath(mapData);
+    path = cvrtMapPath2World(mappath);*/
+     path = cvrtMapPath2World(findPath(floodMap()));
+
+
+
+
 }
 
 double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){

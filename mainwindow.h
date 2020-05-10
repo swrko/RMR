@@ -127,7 +127,8 @@ public:
     void encDiff();
     void navigation();
 
-    void findPath(MapType map);
+    queue<worldPoint>cvrtMapPath2World(list<MapPoint> mappath);
+    list<MapPoint> findPath(MapType map);
     MapType secureMap(MapType origmap);
     void fillInitPoint2Map(double xs, double ys);
     worldPoint mapCoord2World( int xm, int ym);
@@ -240,6 +241,7 @@ private:
      Regstruct regData;
      worldPoint newTarget;
      worldPoint finalTarget;
+     list<MapPoint> mappath;
      queue<worldPoint> path;
 
 public slots:
