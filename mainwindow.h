@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include<QMutex>
 #include<iostream>
+#include<fstream>
+#include<sstream>
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<sys/socket.h>
@@ -12,11 +14,14 @@
 #include<string.h>
 #include<stdlib.h>
 #include<vector>
+#include<queue>
 #include "CKobuki.h"
 #include "Signal.h"
 #include "cmath"
 #include "rplidar.h"
 #include "limits.h"
+#include "map_loader.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -85,10 +90,20 @@ typedef struct{
     double dist;
 }worldPoint;
 
+typedef struct{
+    int x;
+    int y;
+}MapPoint;
+
 
 typedef struct{
-    int mapsize = 320;
-    int map[320][320];
+    int mapsize = 400;
+    int map[400][400];
+    double resolution = 40 ; //  mm
+    MapPoint mstart;
+    MapPoint mfinish;
+    worldPoint wstart;
+    worldPoint wfinish;
 }MapType;
 
 
@@ -110,9 +125,16 @@ public:
     void encDiff();
     void navigation();
 
-    void createMap();
+    MapType secureMap(MapType origmap);
+    void fillInitPoint2Map(double xs, double ys);
+    worldPoint mapCoord2World( int xm, int ym);
+    MapPoint worldCoord2map(worldPoint point);
+    void floodMap();
+    void floodAlgoritm();
+    MapType loadRectMap(string filename);
+    MapType createMap(MapType map);
     void fillMap(double distance, double angle);
-    void writeMap();
+    void writeMap(MapType map);
 
     worldPoint loadTargetCoord();
     worldPoint setPoint(double x, double y);
@@ -191,6 +213,7 @@ private:
      TKobukiData robotdata;
      TShellData robotshell;
      MapType mapData;
+     MapType lmapData;
      int datacounter;
      double pEncL,pEncR,startEncL,startEncR,distanceL,distanceR,pDistanceL,pDistanceR;
      double fi,pFi,x,y,fip = 0.0;
@@ -206,10 +229,13 @@ private:
      double desiredDistance = 0.0;
      double robotDistance = 0.0;
      double angleErr = 0.0;
+     //TMapArea idmap;
+     //map_loader mapLoader;
      Signal mysig;
      Regstruct regData;
      worldPoint newTarget;
      worldPoint finalTarget;
+     queue<worldPoint> path;
 
 public slots:
      void setUiValues(Signal sig);

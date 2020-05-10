@@ -22,8 +22,13 @@ MainWindow::MainWindow(QWidget *parent) :
     lD4R.minDcrit = robotshell.Diameter;
     lD4R.DcritR = lD4R.DcritL = 2.5*robotshell.Diameter/(sin(45.0));
     cout << "vytvaram mapu" << endl;
-    createMap();
+    mapData = createMap(mapData);
     cout << "mapa vytvorena" << endl;
+    mapData = loadRectMap("map4");
+    mapData = secureMap(mapData);
+    writeMap(mapData);
+    cout << "zapisane" << endl;
+   //mapCoord2World(300,301);
 }
 
 MainWindow::~MainWindow()
@@ -244,46 +249,46 @@ void MainWindow::paintEvent(QPaintEvent *event)
         int xp=rect.width()-(rect.width()/
                          2+dist*2*sin((360.0-lD4R.minAngle)*3.14159/180.0))+rect.topLeft().x();
         int yp=rect.height()-(rect.height()/2+dist*2*cos((360.0-lD4R.minAngle)*3.14159/180.0))+rect.topLeft().y();
-        if(rect.contains(xp,yp))
+        if(rect.contains(xp,yp)){
             painter.setPen(pero2);
             painter.drawEllipse(QPoint(rect.height() - xp, yp),4,4);//vykreslime kruh s polomerom 2px
-
+        }
         /// vykreslenie bodu distLcrit
         int distL=lD4R.DistL/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
         int xpL=rect.width()-(rect.width()/
                          2+distL*2*sin((360.0-lD4R.AngleL)*3.14159/180.0))+rect.topLeft().x();
         int ypL=rect.height()-(rect.height()/2+distL*2*cos((360.0-lD4R.AngleL)*3.14159/180.0))+rect.topLeft().y();
-        if(rect.contains(xpL,ypL))
+        if(rect.contains(xpL,ypL)){
             painter.setPen(pero4);
             painter.drawEllipse(QPoint(rect.height() - xpL, ypL),4,4);//vykreslime kruh s polomerom 2px
-
+        }
         /// vykreslenie bodu distRcrit
         int distR=lD4R.DistR/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
         int xpR=rect.width()-(rect.width()/
                          2+distR*2*sin((360.0-lD4R.AngleR)*3.14159/180.0))+rect.topLeft().x();
         int ypR=rect.height()-(rect.height()/2+distR*2*cos((360.0-lD4R.AngleR)*3.14159/180.0))+rect.topLeft().y();
-        if(rect.contains(xpR,ypR))
+        if(rect.contains(xpR,ypR)){
             painter.setPen(pero4);
             painter.drawEllipse(QPoint(rect.height() - xpR, ypR),4,4);//vykreslime kruh s polomerom 2px
-
+        }
         /// vykreslenie bodu maxdistL
         int maxdistl=lD4R.maxDistL/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
         int maxpl=rect.width()-(rect.width()/
                          2+maxdistl*2*sin((360.0-lD4R.maxAngleL)*3.14159/180.0))+rect.topLeft().x();
         int maypl=rect.height()-(rect.height()/2+maxdistl*2*cos((360.0-lD4R.maxAngleL)*3.14159/180.0))+rect.topLeft().y();
-        if(rect.contains(maxpl,maypl))
+        if(rect.contains(maxpl,maypl)){
             painter.setPen(pero3);
             painter.drawEllipse(QPoint(rect.height() - maxpl, maypl),4,4);//vykreslime kruh s polomerom 2px
-
+        }
         /// vykreslenie bodu maxdistR
         int maxdistr=lD4R.maxDistR/15;//delim 15 aby som sa aspon niektorymi udajmi zmestil do okna.
         int maxpr=rect.width()-(rect.width()/
                          2+maxdistr*2*sin((360.0-lD4R.maxAngleR)*3.14159/180.0))+rect.topLeft().x();
         int maypr=rect.height()-(rect.height()/2+maxdistr*2*cos((360.0-lD4R.maxAngleR)*3.14159/180.0))+rect.topLeft().y();
-        if(rect.contains(maxpr,maypr))
+        if(rect.contains(maxpr,maypr)){
             painter.setPen(pero5);
             painter.drawEllipse(QPoint(rect.height() - maxpr, maypr),4,4);//vykreslime kruh s polomerom 2px
-
+        }
         /// vypocet svetovych suradnic bodu maxL (kraj steny lavy)
         if(!isinf(lD4R.maxDistL) && !isinf(lD4R.maxAngleL)){
             lD4R.formAngleL = fmod(lD4R.maxAngleL /180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
@@ -310,6 +315,167 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
 }
 
+MapType MainWindow::secureMap(MapType origmap){
+    int countofsecpoints = robotshell.R/mapData.resolution;
+   // cout << countofsecpoints <<endl; //4
+    /// vytvorenie kopie mapy
+    MapType copymap = origmap;
+  //  memcpy(copymap,origmap,sizeof(MapType));
+
+
+    for(int i=1;i<origmap.mapsize-countofsecpoints;i++){
+            for(int j=1;j<origmap.mapsize-countofsecpoints;j++){
+                if((origmap.map[i-1][j] == 1) && (origmap.map[i][j] == 0)){
+                                    for(int counter = countofsecpoints;counter>0;counter--){
+                                        copymap.map[i+counter][j] = 1;
+                                        }
+                                    }
+                if((origmap.map[i][j-1] == 1) && (origmap.map[i][j] == 0)){
+                    for(int counter = countofsecpoints;counter>0;counter--){
+                        copymap.map[i][j+counter] = 1;
+                        }
+                    }
+
+            }
+        }
+    return copymap;
+}
+
+MapPoint MainWindow::worldCoord2map(worldPoint point){
+    MapPoint tmpPoint;
+    int ofset = mapData.mapsize/2;
+    tmpPoint.x = (int)(point.x*1000.0/40.0);
+    tmpPoint.y = (int)(point.y*1000.0/40.0);
+
+    tmpPoint.x += ofset;
+    tmpPoint.y += ofset;
+    return tmpPoint;
+}
+
+worldPoint MainWindow::mapCoord2World( int xm, int ym){
+    int ofset = mapData.mapsize/2;
+    worldPoint tmpPoint;
+    tmpPoint.x = ((double)(xm-ofset))*40.0/1000.0;
+    tmpPoint.y = ((double)(ym-ofset))*40.0/1000.0;
+ //227 237
+    //cout << xn << "     " << yn << endl;
+    return tmpPoint;
+}
+
+MapType MainWindow::loadRectMap(string filename){
+
+    /// spocitam prvky po najblizsi endl;
+/*
+    MapType tmpMap;
+    FILE* file;
+    file = fopen("map4.txt","r");
+    char buffer[mapData.mapsize+1];
+    char c;
+    int result;
+    result = fread(buffer,1,401,file);
+    cout << buffer[400];
+
+    for(int i= 0; i < mapData.mapsize; i++){
+         result = fread(buffer,1,mapData.mapsize+1,file);
+        for(int j=0; j<= mapData.mapsize; j++){
+            if(j!=mapData.mapsize) {
+                char tmpc = buffer[j];
+                //tmpMap.map[i][j] = atoi(buffer[j]);
+                cout << tmpc - '0';
+             }
+        }
+    }
+    fclose(file);*/
+
+    fstream file;
+    string line;
+    MapType tmpMap;
+    file.open(filename + ".txt", ios::in);
+    for(int i= 0; i < mapData.mapsize; i++){
+        getline(file,line);
+        for(int j=0; j<= mapData.mapsize; j++){
+            if(j!=mapData.mapsize) {
+                tmpMap.map[i][j] = line[j] - '0';
+             //tmpMap.map[i][j] ;
+         }
+        }
+    }
+    file.close();
+
+    ///mapLoader.load_map("priestor.txt",idmap);
+    return tmpMap;
+}
+
+void MainWindow::fillInitPoint2Map(double xs, double ys){
+    int xm,ym;
+    int ofset = mapData.mapsize/2;
+    xm = (int)(((xs)*1000.0)/40.0);
+    ym = (int)(((ys)*1000.0)/40.0);
+   // cout << "xm:  " << xm << "  ym:  " << ym <<endl;
+   // cout << "angle:  " << angle;
+   // cout << "distX:  " << (distance*cos(angle))/30 << "  distY:  " << (distance*cos(angle))/30  << endl;
+    mapData.map[xm+ofset][ym+ofset] = 27457; // 27457 - START
+
+}
+
+void MainWindow::fillMap(double distance, double angle){
+     int xm,ym;
+     int ofset = mapData.mapsize/2;
+
+    angle = fmod((angle*M_PI/180) + fip,(2.0*M_PI)); //uhol bodu voci svetovemu suradnicovemu systemu
+
+    if((distance <= 1500.0) && (distance != 0.0)){
+        xm = (int)((((x)*1000.0) + (distance*cos(angle)))/40.0);
+        ym = (int)((((y)*1000.0) + (distance*sin(angle)))/40.0);
+       // cout << "xm:  " << xm << "  ym:  " << ym <<endl;
+       // cout << "angle:  " << angle;
+       // cout << "distX:  " << (distance*cos(angle))/30 << "  distY:  " << (distance*cos(angle))/30  << endl;
+        mapData.map[xm+ofset][ym+ofset] = 1;
+    }
+}
+
+void MainWindow::writeMap(MapType map){
+    ofstream file;
+    file.open("map.txt", ios::trunc);
+    for(int i=0; i<map.mapsize; i++){
+       if(!(i==0)) file<<endl;
+        //file << endl;
+        for(int j=0; j<map.mapsize; j++){
+            file<<map.map[i][j];
+        }
+    }
+    file.close();
+
+}
+
+void MainWindow::floodMap(){
+        ///4 susednost
+        /// nacitat zaciatocny bod >> done
+        /// nacitat koncovy bod >> done
+        /// vpisat do mapy kazdy jeden z nich >> asi netreba zbytocne listujem mapu
+        /// a zacat zaplavovat ->  rekurzivne sa bude volat pre kazdy bod az dokym nebudu naplneny susedia alebo nebudu nenulove prvky
+        /// do que hodim  koncovy bod ten zavola na svojich 4 susedov opat ten isty algoritmus ale s incrementom naplnania , vo funkcii sa bude podavat argument naplnania
+   mapData.mfinish = worldCoord2map(mapData.wfinish);
+   mapData.mstart = worldCoord2map(mapData.wstart);
+
+
+
+}
+
+void MainWindow::floodAlgoritm(){
+        /// potrebujem vediet nacitat mapu  >> done
+        /// prepocet mapovych suradnic na svetove a naspat >> done
+        /// vytvorenie zasobnika svetovych suradnic ktory budem vyprazdnovat ako newTarget  >> done  queue <worldPoint> path
+        /// rozsirenie stien prekazok o priemer polomer robota >> done  secureMap
+        /// naplnit mapu cislami pre susednost zo startovnej pozicie po ciel
+        //lmapData = loadRectMap("map4");
+        finalTarget = loadTargetCoord();
+        mapData.wfinish = finalTarget;
+        mapData.wstart = setPoint(x,y);
+
+
+}
+
 double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
    return (double)sqrt(pow(x2-x1,2)+pow(y2-y1,2));
 }
@@ -333,8 +499,6 @@ double MainWindow::calcAngle(double x1, double y1, double x2, double y2){
 }
 
 void MainWindow::encDiff(){
-    /// funckia bude vraciat rozdiel medzi pociatocnou hodnotou encodera a aktualnou
-    /// taktiez treba spravit kontrolu pretecenia buffera pre encoder
 
     /// detekcia pretecenia encodera v oboch smeroch - lave koleso
     if(pEncL-robotdata.EncoderLeft >(60000)){
@@ -389,42 +553,14 @@ void MainWindow::rotateRobot(){
     on_pushButton_6_clicked(); //left
 }
 
-void MainWindow::createMap(){
-    for(int i = 0; i< mapData.mapsize;i++){
-        for(int j = 0; j<mapData.mapsize; j++){
+MapType MainWindow::createMap(MapType map){
+    for(int i = 0; i< map.mapsize;i++){
+        for(int j = 0; j<map.mapsize; j++){
 
-            mapData.map[i][j] = 0;
+            map.map[i][j] = 0;
         }
     }
-}
-
-void MainWindow::fillMap(double distance, double angle){
-     int xm,ym;
-     int ofset = mapData.mapsize /2;
-
-     angle = fmod((angle*M_PI/180) + fip,(2.0*M_PI)); //uhol bodu voci svetovemu suradnicovemu systemu
-
-    if((distance <= 1500.0) && (distance != 0.0)){
-        xm = (int)((((x+1)*1000.0) + (distance*cos(angle)))/40.0);
-        ym = (int)((((y+1)*1000.0) + (distance*sin(angle)))/40.0);
-       // cout << "xm:  " << xm << "  ym:  " << ym <<endl;
-       // cout << "angle:  " << angle;
-       // cout << "distX:  " << (distance*cos(angle))/30 << "  distY:  " << (distance*cos(angle))/30  << endl;
-        mapData.map[xm+ofset][ym+ofset] = 1;
-    }
-}
-
-void MainWindow::writeMap(){
-    ofstream file;
-    file.open("map.txt", ios::trunc);
-    for(int i=0; i<mapData.mapsize; i++){
-       // if(!(i==0)) file<<endl;
-        file << endl;
-        for(int j=0; j<mapData.mapsize; j++){
-            file<<mapData.map[i][j];
-        }
-    }
-    file.close();
+    return map;
 }
 
 bool MainWindow::isPathBlocked(){
@@ -694,6 +830,8 @@ void MainWindow::processThisRobot()
     encDiff();
     navigation();
     angleDistFormating();
+
+
 /*
     cout<< "targetx:  " << newTarget.x << "  targety:  " << newTarget.y << endl;
     cout<< "targetfi:  " << newTarget.fi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<newTarget.dist << endl;
@@ -701,14 +839,14 @@ void MainWindow::processThisRobot()
     cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
 */
    if(datacounter==100) {
-       createMap();
+      mapData =  createMap(mapData);
        cout << "mapa nulovana!" << endl;
     }
 
     ///kazdy 300ty cyklus sa zapisu data mapy do suboru map.txt
    if(datacounter%300 == 0){
         //cout<< "zapisujem mapu" <<endl;
-        writeMap();
+        writeMap(mapData);
         //cout<< "mapa zapisana" << endl;
     }
 

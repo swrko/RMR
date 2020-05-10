@@ -48,7 +48,7 @@ typedef struct
 
 typedef struct
 {
-    double Diameter = 350.0;
+    double Diameter = 350.0; // mm
     double R = 175.0;
 
 } TShellData;
