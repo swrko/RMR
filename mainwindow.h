@@ -22,6 +22,7 @@
 #include "limits.h"
 #include "map_loader.h"
 
+#define HUGEVALINT 999999;
 
 namespace Ui {
 class MainWindow;
@@ -126,6 +127,7 @@ public:
     void encDiff();
     void navigation();
 
+    void findPath(MapType map);
     MapType secureMap(MapType origmap);
     void fillInitPoint2Map(double xs, double ys);
     worldPoint mapCoord2World( int xm, int ym);
@@ -136,6 +138,7 @@ public:
     MapType createMap(MapType map);
     void fillMap(double distance, double angle);
     void writeMap(MapType map);
+    void writeMapCsV(MapType map);
 
     worldPoint loadTargetCoord();
     worldPoint setPoint(double x, double y);

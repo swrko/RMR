@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ipaddress="127.0.0.1";
     ui->setupUi(this);
     datacounter=0;
+    x=y=0.0; fi=pFi=M_PI_2;  // 90 stupnov
     lD4R.minDcrit = robotshell.Diameter;
     lD4R.DcritR = lD4R.DcritL = 2.5*robotshell.Diameter/(sin(45.0));
     cout << "vytvaram mapu" << endl;
@@ -30,9 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
     cout << "zapisane" << endl;
    //mapCoord2World(300,301);
     floodAlgoritm();
-    cout << "zaplavena mapa" <<endl;
-    writeMap(mapData);
-    cout << "zapisana zaplava" <<endl;
+    //cout << "zaplavena mapa" <<endl;
+    writeMapCsV(mapData);
+    //cout << "zapisana zaplava" <<endl;
 }
 
 MainWindow::~MainWindow()
@@ -446,6 +447,21 @@ void MainWindow::fillMap(double distance, double angle){
     }
 }
 
+void MainWindow::writeMapCsV(MapType map){
+    ofstream file;
+    file.open("map.csv", ios::trunc);
+    for(int i=0; i<map.mapsize; i++){
+       if(!(i==0)) file<<endl;
+        //file << endl;
+        for(int j=0; j<map.mapsize; j++){
+            if(j!=map.mapsize-1) file<<map.map[i][j]<<",";
+            else file<<map.map[i][j];
+        }
+    }
+    file.close();
+
+}
+
 void MainWindow::writeMap(MapType map){
     ofstream file;
     file.open("map.txt", ios::trunc);
@@ -468,22 +484,23 @@ MapType MainWindow::floodMap(){
         /// a zacat zaplavovat ->  rekurzivne sa bude volat pre kazdy bod az dokym nebudu naplneny susedia alebo nebudu nenulove prvky
         /// do que hodim  koncovy bod ten zavola na svojich 4 susedov opat ten isty algoritmus ale s incrementom naplnania , vo funkcii sa bude podavat argument naplnania
 
-   mapData.mfinish = worldCoord2map(mapData.wfinish.x,mapData.wfinish.y);
-   mapData.mstart = worldCoord2map(mapData.wstart.x,mapData.wstart.y);
+   mapData.mfinish = worldCoord2map(mapData.wfinish.x,mapData.wfinish.y); mapData.mfinish.value = 2;
+   mapData.mstart = worldCoord2map(mapData.wstart.x,mapData.wstart.y); mapData.mstart.value = 123456;
    int smerX[4] = {-1,0,0,1};
    int smerY[4] = {0,-1,1,0};
    MapType copymap = mapData;
    list<MapPoint> points2go;
-   copymap.map[mapData.mstart.x][mapData.mstart.y] = 99;
-   points2go.push_back(mapData.mfinish);
-   points2go.begin()->value = 2;
-   copymap.map[points2go.begin()->x][points2go.begin()->y] = points2go.begin()->value; //koncovy bod
+   copymap.map[copymap.mstart.x][copymap.mstart.y] = copymap.mstart.value;
+   points2go.push_back(copymap.mfinish);
+   points2go.begin()->value = 3;
+   copymap.map[points2go.begin()->x][points2go.begin()->y] = points2go.begin()->value-1; //koncovy bod
 
 
    while(!points2go.empty()){
        for(int i=0;i<4;i++){
+           if(copymap.map[(points2go.begin()->x)+smerX[i]][(points2go.begin()->y)+smerY[i]] == 123456) return copymap;
            if(copymap.map[(points2go.begin()->x)+smerX[i]][(points2go.begin()->y)+smerY[i]] == 0){ // prehladavam 4 susednost
-                    points2go.push_back(setPoint(points2go.begin()->x + smerX[i], points2go.begin()->y + smerY[i], points2go.begin()->value + 1)); // vlozim novy bod na koniec listu s novymi suradnicami a hodnotou
+                    points2go.push_back(setPoint(points2go.begin()->x + smerX[i], points2go.begin()->y +smerY[i], (points2go.begin()->value + 1))); // vlozim novy bod na koniec listu s novymi suradnicami a hodnotou
                     copymap.map[(points2go.begin()->x)+smerX[i]][(points2go.begin()->y)+smerY[i]] = points2go.begin()->value; //nastavim value zaplavoveho algoritmu v mape
            }
        }
@@ -492,17 +509,61 @@ MapType MainWindow::floodMap(){
     return copymap;
 }
 
+void MainWindow::findPath(MapType map){
+    ///som na starte prehladavam okolie
+    ///ak z okolia < lowwal && >1 - najmensi z prechadzadzanych a nie je to stena
+    /// vloz na koniec listu nastav lowsmer
+    ///
+
+    int smerX[4] = {0,1,-1,0};
+    int smerY[4] = {1,0,0,-1};
+    int psmer = 0;
+    int lowval,lowsmer;
+    int counter=0;
+    list<MapPoint> points2go;
+    list<MapPoint> pathPoints;
+    MapPoint position = map.mstart;
+   //points2go.push_back(map.mstart);
+    lowval = HUGEVALINT;
+    while(position.value != map.mfinish.value){
+        for(int i=0;i<4;i++){
+           if(map.map[(position.x)+smerX[i]][(position.y)+smerY[i]] > 1 && map.map[(position.x+smerX[i])][(position.y +smerY[i])] <lowval){ //ak nie je stena a je najmensi najdeny
+               if(!points2go.empty()) points2go.pop_front();    // ak nie je prazny tak ho odstran
+               points2go.push_back(setPoint(position.x + smerX[i], position.y +smerY[i], map.map[(position.x+smerX[i])][(position.y +smerY[i])]));
+               lowval = points2go.begin()->value;// nastav najmensiu hodnotu okolia
+               lowsmer = i; // nastav smer
+           }
+       }
+       // posun sa v smere
+       position.x = points2go.begin()->x;
+       position.y = points2go.begin()->y;
+       position.value = points2go.begin()->value;
+       if(psmer != lowsmer && counter != 0){    // ak sa zmenil smer a nie je to prvy posun
+           pathPoints.push_back(position);  // pridaj uzol
+           psmer = lowsmer; // nastav novy smer
+       }
+       counter++;
+    }
+    cout<<"nasiel som target" <<endl;
+   // cout<<"pocet uzlov:  " << pathPoints.size() << "  count:  " << count << endl;
+    cout << "pocet uzlov:  " <<  pathPoints.size() <<endl;
+}
+
 void MainWindow::floodAlgoritm(){
         /// potrebujem vediet nacitat mapu  >> done
         /// prepocet mapovych suradnic na svetove a naspat >> done
         /// vytvorenie zasobnika svetovych suradnic ktory budem vyprazdnovat ako newTarget  >> done  queue <worldPoint> path
         /// rozsirenie stien prekazok o priemer polomer robota >> done  secureMap
-        /// naplnit mapu cislami pre susednost zo startovnej pozicie po ciel
+        /// naplnit mapu cislami pre susednost zo startovnej pozicie po ciel >> done floodMap()
+        /// prehladavanie cesty -> vezmem prvky >1 a zaroven najmensi zo susedov a vlozim do listu
+        ///     nasledne prechadzam cez list v predchadzajucom smere , defaulty smer je podla prveho prvku v liste z najblizsich susedov
+        ///     ak sa nachadza jediny prvok s inym smerom smer sa meni
         //lmapData = loadRectMap("map4");
         finalTarget = loadTargetCoord();
         mapData.wfinish = setPoint(4.0,4.0);
         mapData.wstart = setPoint(x+1,y+1);
         mapData = floodMap();
+        findPath(mapData);
 }
 
 double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
