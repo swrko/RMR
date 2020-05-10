@@ -25,15 +25,17 @@ MainWindow::MainWindow(QWidget *parent) :
     cout << "vytvaram mapu" << endl;
     mapData = createMap(mapData);
     cout << "mapa vytvorena" << endl;
-    mapData = loadRectMap("map4");
-    mapData = secureMap(mapData);
-    writeMap(mapData);
-    cout << "zapisane" << endl;
-   //mapCoord2World(300,301);
+/*
+    finalTarget.x = 4.0; finalTarget.y = 4.0;
     floodAlgoritm();
-    //cout << "zaplavena mapa" <<endl;
-    writeMapCsV(mapData);
-    //cout << "zapisana zaplava" <<endl;
+    int hhg = path.size();
+    for(int i=0; i < hhg;i++){
+        newTarget.x = path.front().x;
+        newTarget.y = path.front().y;
+        path.pop();
+
+    }        cout << newTarget.x << "    " << newTarget.y << endl;
+*/
 }
 
 MainWindow::~MainWindow()
@@ -321,7 +323,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 }
 
 MapType MainWindow::secureMap(MapType origmap){
-    int countofsecpoints = robotshell.R/mapData.resolution;
+    int countofsecpoints = (robotshell.R/mapData.resolution);
    // cout << countofsecpoints <<endl; //4
     /// vytvorenie kopie mapy
     MapType copymap = origmap;
@@ -334,10 +336,16 @@ MapType MainWindow::secureMap(MapType origmap){
                                     for(int counter = countofsecpoints;counter>0;counter--){
                                         copymap.map[i+counter][j] = 1;
                                         }
+                                    for(int counter = countofsecpoints;counter>0;counter--){
+                                        copymap.map[i-counter][j] = 1;
+                                        }
                                     }
                 if((origmap.map[i][j-1] == 1) && (origmap.map[i][j] == 0)){
                     for(int counter = countofsecpoints;counter>0;counter--){
                         copymap.map[i][j+counter] = 1;
+                        }
+                    for(int counter = countofsecpoints;counter>0;counter--){
+                        copymap.map[i][j-counter] = 1;
                         }
                     }
 
@@ -447,9 +455,9 @@ void MainWindow::fillMap(double distance, double angle){
     }
 }
 
-void MainWindow::writeMapCsV(MapType map){
+void MainWindow::writeMapCsV(MapType map, string name){
     ofstream file;
-    file.open("map.csv", ios::trunc);
+    file.open(name+".csv", ios::trunc);
     for(int i=0; i<map.mapsize; i++){
        if(!(i==0)) file<<endl;
         //file << endl;
@@ -462,9 +470,9 @@ void MainWindow::writeMapCsV(MapType map){
 
 }
 
-void MainWindow::writeMap(MapType map){
+void MainWindow::writeMap(MapType map, string name){
     ofstream file;
-    file.open("map.txt", ios::trunc);
+    file.open(name+".txt", ios::trunc);
     for(int i=0; i<map.mapsize; i++){
        if(!(i==0)) file<<endl;
         //file << endl;
@@ -567,6 +575,47 @@ queue<worldPoint> MainWindow::cvrtMapPath2World(list<MapPoint> mappath){
     return wrldpath;
 }
 
+void MainWindow::mapNavigate(){
+    /// vyprazdnujem zasobnik dokym nie je prazdny a pokial robot stoji nasledovne
+    /// nacitam finalPoint z linedit >> done
+    /// vlozim do flood algoritmu >> done
+    /// vrati mi zasobnik bodov ktore treba prejst >> done
+    /// queue  je typu FIFO -> vyberiem bod  nastavim ako newTarget >> done
+    /// setnem startState  na TRUE >> done
+    /// popnem queue >> done
+    /// cakam kym nie je Startstate opat FALSE a opakujem dokial nie je zasobnik prazdny >> done
+
+ if(mapNavigateState){
+    //cout << "navigate" << endl;
+     if(!firsttime){
+         finalTarget = loadTargetCoord();
+         cout<< "got Final Target" << finalTarget.x << "    " << finalTarget.y  << endl;
+         floodAlgoritm();
+         firsttime = TRUE;
+        /* int hhg = path.size();
+         for(int i=0; i < hhg;i++){
+             newTarget.x = path.front().x;
+             newTarget.y = path.front().y;
+             path.pop();
+            cout << newTarget.x << "    " << newTarget.y << endl;*/
+
+         cout << "FIRST TIME DONE" << endl;
+    }
+    if(!path.empty() && !startState){
+        newTarget.x = path.front().x;
+        newTarget.y = path.front().y;
+        path.pop();
+        startState = TRUE;
+        cout << newTarget.x << "    " << newTarget.y << endl;
+    }
+    //cout<< path.empty() << endl;
+    if(path.empty()){
+        cout << "final reached !!"<<endl;
+        mapNavigateState = FALSE;
+    }
+ }
+}
+
 void MainWindow::floodAlgoritm(){
     /// potrebujem vediet nacitat mapu  >> done
     /// prepocet mapovych suradnic na svetove a naspat >> done
@@ -578,18 +627,22 @@ void MainWindow::floodAlgoritm(){
     ///     ak sa nachadza jediny prvok s inym smerom smer sa meni  >> done
     /// list uzlov + ciel  >> donemapPath
     /// prekonvertovat na suradnice sveta >> done
+    mapData = loadRectMap("map");
+    mapData = secureMap(mapData);
+    writeMap(mapData,"secmap");
+    //cout << "zapisane" << endl;
+   //mapCoord2World(300,301);
+    //mapData = floodMap();
+    //cout << "zaplavena mapa" <<endl;
+    //cout << "zapisana zaplava" <<endl;
     //lmapData = loadRectMap("map4");
-    finalTarget = loadTargetCoord();
-    mapData.wfinish = setPoint(4.0,4.0);
-    mapData.wstart = setPoint(x+1,y+1);
-   /* mapData = floodMap();
+    mapData.wfinish = setPoint(finalTarget.x,finalTarget.y);
+    mapData.wstart = setPoint(x,y);   // stara mapa pracovala so srudanicami +1
+    mapData = floodMap();
+    writeMapCsV(mapData,"map");
     mappath = findPath(mapData);
-    path = cvrtMapPath2World(mappath);*/
-     path = cvrtMapPath2World(findPath(floodMap()));
-
-
-
-
+    path = cvrtMapPath2World(mappath);
+    //path = cvrtMapPath2World(findPath(floodMap()));
 }
 
 double MainWindow::twoPoitDistance(double x1, double y1, double x2, double y2){
@@ -605,8 +658,8 @@ worldPoint MainWindow::setPoint(double x,double y){
 
 worldPoint MainWindow::loadTargetCoord(){
     worldPoint target;
-    target.x = ui->lineEdit_11->text().toDouble();
-    target.y = ui->lineEdit_12->text().toDouble();
+    target.x = (ui->lineEdit_11->text().toDouble()) -1.0;
+    target.y = (ui->lineEdit_12->text().toDouble()) -1.0;
     return target;
 }
 
@@ -664,9 +717,9 @@ void MainWindow::encDiff(){
 }
 
 void MainWindow::rotateRobot(){
-  /* if(angleErr > 0) on_pushButton_6_clicked(); // Right
+  /*if(angleErr > 0 &&  !rotateState) on_pushButton_6_clicked(); // Right
            else on_pushButton_5_clicked();  // Left*/
-    on_pushButton_6_clicked(); //left
+   on_pushButton_6_clicked(); //left
 }
 
 MapType MainWindow::createMap(MapType map){
@@ -813,7 +866,7 @@ void MainWindow::navigation(){
         }
     }
 
-    if(twoPoitDistance(x,y,finalTarget.x,finalTarget.y) > shortestDistance && !startState && navigationState && !changedTargetState){
+    if(navigationState && twoPoitDistance(x,y,finalTarget.x,finalTarget.y) > shortestDistance && !startState &&  !changedTargetState){
             wallFollowState = TRUE;
             wallDetectionState = FALSE;
     }else{
@@ -904,9 +957,9 @@ void MainWindow::angleDistRegulator(){
 
     if(startState){
         //if(angleErr > 0 && angleErr > M_PI_4){
-        if(abs(angleErr)>M_PI_4){
-            rotateState = TRUE;
+        if(abs(angleErr)>(M_PI_4)/(3/2)){
             rotateRobot();
+            rotateState = TRUE;
         }else {
             MainWindow::on_pushButton_4_clicked();  // Stop
             rotateState = FALSE;
@@ -936,7 +989,7 @@ void MainWindow::angleDistRegulator(){
 
             }
 
-             cout<< "R:  " << regData.Rcirc<< "  T:  " << regData.TransSp << "  err:  "<< angleErr << "  dist:  " << newTarget.dist <<endl;
+          //   cout<< "R:  " << regData.Rcirc<< "  T:  " << regData.TransSp << "  err:  "<< angleErr << "  dist:  " << newTarget.dist <<endl;
        }
 
 }
@@ -945,24 +998,27 @@ void MainWindow::processThisRobot()
 {
     encDiff();
     navigation();
+    mapNavigate();
     angleDistFormating();
 
 
-/*
+
     cout<< "targetx:  " << newTarget.x << "  targety:  " << newTarget.y << endl;
     cout<< "targetfi:  " << newTarget.fi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<newTarget.dist << endl;
     cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
-    cout<< "startState:  " << startState << "  rotateState:  " << rotateState << endl;
-*/
-   if(datacounter==100) {
+    cout<< "startState:  " << startState << "  rotateState:  " << rotateState << "  mapNavState:  " << mapNavigateState << endl;
+
+   if(mapResetState) {
       mapData =  createMap(mapData);
        cout << "mapa nulovana!" << endl;
+       mapResetState = FALSE;
     }
 
+   //cout <<" Maping State:   "<< mapingState<< endl;
     ///kazdy 300ty cyklus sa zapisu data mapy do suboru map.txt
-   if(datacounter%300 == 0){
+   if(datacounter%300 == 0 && mapingState){
         //cout<< "zapisujem mapu" <<endl;
-        writeMap(mapData);
+        writeMap(mapData,"map");
         //cout<< "mapa zapisana" << endl;
     }
 
@@ -1040,6 +1096,37 @@ void  MainWindow::setUiValues(Signal sig)
 
 }
 
+
+void MainWindow::on_pushButton_16_clicked() //general stop
+{
+    startState = FALSE;
+    navigationState = FALSE;
+    mapNavigateState = FALSE;
+    mapingState = FALSE;
+    mapResetState = FALSE;
+    std::vector<unsigned char> mess=robot.setArcSpeed(0,0);
+    if (sendto(rob_s, (char*)mess.data(), sizeof(char)*mess.size(), 0, (struct sockaddr*) &rob_si_posli, rob_slen) == -1)
+    {
+
+    }
+
+}
+
+void MainWindow::on_pushButton_15_clicked(){ //mapReseteState
+    mapResetState = TRUE;
+}
+
+void MainWindow::on_pushButton_14_clicked(){ //mapingState
+
+    mapingState = TRUE;
+}
+
+void MainWindow::on_pushButton_13_clicked() // mapNavigate
+{
+    mapNavigateState = TRUE;
+    firsttime = FALSE;
+}
+
 void MainWindow::on_pushButton_12_clicked() // navigate
 {
     finalTarget = loadTargetCoord();
@@ -1051,6 +1138,10 @@ void MainWindow::on_pushButton_12_clicked() // navigate
 void MainWindow::on_pushButton_11_clicked() //stop stop
 {
     startState = FALSE;
+    navigationState = FALSE;
+    //mapNavigateState = FALSE;
+    mapingState = FALSE;
+    mapResetState = FALSE;
     std::vector<unsigned char> mess=robot.setArcSpeed(0,0);
     if (sendto(rob_s, (char*)mess.data(), sizeof(char)*mess.size(), 0, (struct sockaddr*) &rob_si_posli, rob_slen) == -1)
     {
@@ -1080,8 +1171,8 @@ void MainWindow::on_pushButton_9_clicked() //start button
   /// nastavenie pociatocnych hodnot encodera
   mysig.startL = startEncL = robotdata.EncoderLeft;
   mysig.startR = startEncR = robotdata.EncoderRight;
-  x=y=0.0; fi=pFi=M_PI_2;  // 90 stupnov
-  newTarget = loadTargetCoord();
+  //x=y=0.0; fi=pFi=M_PI_2;  // 90 stupnov
+  //newTarget = loadTargetCoord();
 }
 
 void MainWindow::on_pushButton_2_clicked() //forward

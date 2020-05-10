@@ -47,7 +47,11 @@ public:
     QVBoxLayout *verticalLayout_2;
     QPushButton *pushButton_8;
     QPushButton *pushButton_7;
+    QPushButton *pushButton_16;
     QSpacerItem *verticalSpacer;
+    QPushButton *pushButton_15;
+    QPushButton *pushButton_14;
+    QPushButton *pushButton_13;
     QPushButton *pushButton_12;
     QPushButton *pushButton_11;
     QPushButton *pushButton_10;
@@ -186,9 +190,29 @@ public:
 
         verticalLayout_2->addWidget(pushButton_7);
 
+        pushButton_16 = new QPushButton(centralWidget);
+        pushButton_16->setObjectName(QString::fromUtf8("pushButton_16"));
+
+        verticalLayout_2->addWidget(pushButton_16);
+
         verticalSpacer = new QSpacerItem(198, 98, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout_2->addItem(verticalSpacer);
+
+        pushButton_15 = new QPushButton(centralWidget);
+        pushButton_15->setObjectName(QString::fromUtf8("pushButton_15"));
+
+        verticalLayout_2->addWidget(pushButton_15);
+
+        pushButton_14 = new QPushButton(centralWidget);
+        pushButton_14->setObjectName(QString::fromUtf8("pushButton_14"));
+
+        verticalLayout_2->addWidget(pushButton_14);
+
+        pushButton_13 = new QPushButton(centralWidget);
+        pushButton_13->setObjectName(QString::fromUtf8("pushButton_13"));
+
+        verticalLayout_2->addWidget(pushButton_13);
 
         pushButton_12 = new QPushButton(centralWidget);
         pushButton_12->setObjectName(QString::fromUtf8("pushButton_12"));
@@ -381,6 +405,10 @@ public:
         pushButton_4->setText(QApplication::translate("MainWindow", "Stop", 0, QApplication::UnicodeUTF8));
         pushButton_8->setText(QApplication::translate("MainWindow", "Reset robot", 0, QApplication::UnicodeUTF8));
         pushButton_7->setText(QApplication::translate("MainWindow", "Reset Laser", 0, QApplication::UnicodeUTF8));
+        pushButton_16->setText(QApplication::translate("MainWindow", "GENERAL STOP", 0, QApplication::UnicodeUTF8));
+        pushButton_15->setText(QApplication::translate("MainWindow", "mapReset", 0, QApplication::UnicodeUTF8));
+        pushButton_14->setText(QApplication::translate("MainWindow", "maping", 0, QApplication::UnicodeUTF8));
+        pushButton_13->setText(QApplication::translate("MainWindow", "mapNavigate", 0, QApplication::UnicodeUTF8));
         pushButton_12->setText(QApplication::translate("MainWindow", "navigate", 0, QApplication::UnicodeUTF8));
         pushButton_11->setText(QApplication::translate("MainWindow", "Stop", 0, QApplication::UnicodeUTF8));
         pushButton_10->setText(QApplication::translate("MainWindow", "go on !", 0, QApplication::UnicodeUTF8));

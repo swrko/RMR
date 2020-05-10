@@ -29,11 +29,11 @@ class MainWindow;
 }
 
 typedef struct{
-    double Krc = 320;
-    double Kts = 400;// rozdiel je v metroch rychlost chcem v mm >> chyba v metroch >> 100vky mm
+    double Krc = 170; //320
+    double Kts = 600;// rozdiel je v metroch rychlost chcem v mm >> chyba v metroch >> 100vky mm
     double Rcirc;
     double TransSp;
-    const double max_trans_speed = 400;
+    const double max_trans_speed = 700;
 }Regstruct;
 
 typedef struct {
@@ -127,6 +127,7 @@ public:
     void encDiff();
     void navigation();
 
+    void mapNavigate();
     queue<worldPoint>cvrtMapPath2World(list<MapPoint> mappath);
     list<MapPoint> findPath(MapType map);
     MapType secureMap(MapType origmap);
@@ -138,8 +139,8 @@ public:
     MapType loadRectMap(string filename);
     MapType createMap(MapType map);
     void fillMap(double distance, double angle);
-    void writeMap(MapType map);
-    void writeMapCsV(MapType map);
+    void writeMap(MapType map, string name);
+    void writeMapCsV(MapType map, string name);
 
     worldPoint loadTargetCoord();
     worldPoint setPoint(double x, double y);
@@ -190,6 +191,14 @@ public:
     QMutex mutex;
 
 private slots:
+    void on_pushButton_16_clicked();
+
+    void on_pushButton_15_clicked();
+
+    void on_pushButton_14_clicked();
+
+    void on_pushButton_13_clicked();
+
     void on_pushButton_12_clicked();
 
     void on_pushButton_11_clicked();
@@ -230,6 +239,10 @@ private:
      bool wallDetectionState = FALSE;
      bool navigationState = FALSE;
      bool changedTargetState = FALSE;
+     bool mapNavigateState = FALSE;
+     bool mapingState = FALSE;
+     bool mapResetState = FALSE;
+     bool firsttime = FALSE;
      double shortestDistance = 0.0;
      double desiredAngle = 0.0;
      double desiredDistance = 0.0;
