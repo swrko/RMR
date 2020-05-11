@@ -111,7 +111,7 @@ typedef struct{
 
 typedef struct {
     double minDist2Target;
-
+    double minDist2Fintarget;
 }WallFollowData;
 
 class MainWindow : public QMainWindow
@@ -155,8 +155,9 @@ public:
     double angleFormating(double fi);
     void angleDistFormating();
     void angleDistRegulator();
-    void wallDetection();
-    void wallFollowing();
+    worldPoint wallDetection();
+    worldPoint wallFollowing();
+    void updateLidarData();
 
 
 
@@ -256,6 +257,7 @@ private:
      worldPoint finalTarget;
      list<MapPoint> mappath;
      queue<worldPoint> path;
+     WallFollowData navigateData;
 
 public slots:
      void setUiValues(Signal sig);

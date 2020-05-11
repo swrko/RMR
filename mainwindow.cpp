@@ -249,6 +249,21 @@ void MainWindow::paintEvent(QPaintEvent *event)
             lD4R.minPointR = TRUE;
         }else lD4R.minPointR = FALSE;
 
+        /// vypocet svetovych suradnic bodu maxL (kraj steny lavy)
+        if(!isinf(lD4R.maxDistL) && !isinf(lD4R.maxAngleL)){
+            lD4R.formAngleL = fmod(lD4R.maxAngleL /180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            lD4R.maxXL = x + ((lD4R.maxDistL/1000.0)*cos(lD4R.formAngleL));
+            lD4R.maxYL = y + ((lD4R.maxDistL/1000.0)*sin(lD4R.formAngleL));
+            lD4R.maxPointL = TRUE;
+        }else lD4R.maxPointL = FALSE;
+
+        /// vypocet svetovych suradnic bodu maxR (kraj steny pravy)
+        if(!isinf(lD4R.maxAngleR) && !isinf(lD4R.maxDistR)){
+            lD4R.formAngleR = fmod(lD4R.maxAngleR/180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+            lD4R.maxXR = x + ((lD4R.maxDistR/1000.0)*cos(lD4R.formAngleR));
+            lD4R.maxYR = y + ((lD4R.maxDistR/1000.0)*sin(lD4R.formAngleR));
+            lD4R.maxPointR = TRUE;
+        }else lD4R.maxPointR = FALSE;
           // cout << "targetFi:  " << targetFi*180/M_PI << "  fip:  " << fip*180/M_PI  << "  angleDiff:  " << angleDiff << "  minDist:  " << lD4R.minDist << "  minAngle:  " << fmod(lD4R.minAngle*180/M_PI,360)  << endl;
 
         /// vykreslenie bodu mindist
@@ -296,21 +311,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
             painter.setPen(pero5);
             painter.drawEllipse(QPoint(rect.height() - maxpr, maypr),4,4);//vykreslime kruh s polomerom 2px
         }
-        /// vypocet svetovych suradnic bodu maxL (kraj steny lavy)
-        if(!isinf(lD4R.maxDistL) && !isinf(lD4R.maxAngleL)){
-            lD4R.formAngleL = fmod(lD4R.maxAngleL /180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
-            lD4R.maxXL = x + ((lD4R.maxDistL/1000.0)*cos(lD4R.formAngleL));
-            lD4R.maxYL = y + ((lD4R.maxDistL/1000.0)*sin(lD4R.formAngleL));
-            lD4R.maxPointL = TRUE;
-        }else lD4R.maxPointL = FALSE;
 
-        /// vypocet svetovych suradnic bodu maxR (kraj steny pravy)
-        if(!isinf(lD4R.maxAngleR) && !isinf(lD4R.maxDistR)){
-            lD4R.formAngleR = fmod(lD4R.maxAngleR/180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
-            lD4R.maxXR = x + ((lD4R.maxDistR/1000.0)*cos(lD4R.formAngleR));
-            lD4R.maxYR = y + ((lD4R.maxDistR/1000.0)*sin(lD4R.formAngleR));
-            lD4R.maxPointR = TRUE;
-        }else lD4R.maxPointR = FALSE;
 
         //cout << "maxXL:  " << lD4R.maxXL << "  maxYL:  " << lD4R.maxYL << "  maxXR:  " << lD4R.maxXR << "  maxYR:  " << lD4R.maxYR << endl;
        // cout << "minX:  " << lD4R.minX << "  minY:  " << lD4R.minY << endl;
@@ -804,11 +805,11 @@ worldPoint MainWindow::findSecurePoint(double edgePointX, double edgePointY){
     securepoint.fi = angleFormating(securepoint.fi);
 
     if(securepoint.fi < M_PI){
-        securepoint.x = edgePointX + (securedistance*cos(securepoint.fi +90));
-        securepoint.y = edgePointY + (securedistance*sin(securepoint.fi +90));
+        securepoint.x = edgePointX + ((securedistance/1000.0)*cos(securepoint.fi +90));
+        securepoint.y = edgePointY + ((securedistance/1000.0)*sin(securepoint.fi +90));
     }else{
-        securepoint.x = edgePointX + (securedistance*cos(securepoint.fi -90));
-        securepoint.y = edgePointY + (securedistance*sin(securepoint.fi -90));
+        securepoint.x = edgePointX + ((securedistance/1000.0)*cos(securepoint.fi -90));
+        securepoint.y = edgePointY + ((securedistance/1000.0)*sin(securepoint.fi -90));
     }
 return securepoint;
 }
@@ -817,68 +818,193 @@ void MainWindow::goToTarget(){
     startState = TRUE;
 }
 
-void MainWindow::navigation(){
+void MainWindow::updateLidarData(){
 
-    /// v podstate prva vec ktora sa vykona tu sa rozhodne ci budem sledovat stenu  alebo obchadzam prekazku
-    if(navigationState && !wallDetectionState && !wallFollowState){
-         // toto spravim v tlacidle
-        wallDetectionState = TRUE; wallFollowState = FALSE;
-        changedTargetState = TRUE;
-      /*  if(isPathBlocked()){
+    mutex.lock();//lock.. idem robit s premennou ktoru ine vlakno moze prepisovat...
+    double  angleDiff;
 
-            wallDetection();
-            shortestDistance = newTarget.dist;
-            goToTarget();
-        }else{
-            newTarget = finalTarget;
-            goToTarget();
-            navigationState = FALSE;
-        }*/
-    }
-
-    if(navigationState && wallDetectionState && !startState){
-        if(!changedTargetState){
-            newTarget = finalTarget;
-            changedTargetState = TRUE;
-        }else{
-            if(isPathBlocked()){
-                wallDetection(); // meni target
-                shortestDistance = twoPoitDistance(x,y,finalTarget.x,finalTarget.y);
-                goToTarget();
-            }else{
-                newTarget = finalTarget;
-                goToTarget();
-                navigationState = FALSE; wallDetectionState = FALSE; wallFollowState = FALSE;
-            }
-            changedTargetState = FALSE;
+    for(int k=0;k<copyOfLaserData.numberOfScans;k++)
+    {
+        ///initials
+        if(k == 0){
+            lD4R.minDist = HUGE_VAL;
+            lD4R.minAngle = HUGE_VAL;
+            lD4R.DistL = HUGE_VAL;
+            lD4R.AngleL = HUGE_VAL;
+            lD4R.DistR = HUGE_VAL;
+            lD4R.AngleR = HUGE_VAL;
+            lD4R.maxDistL = -HUGE_VAL;
+            lD4R.maxAngleL = -HUGE_VAL;
+            lD4R.maxDistR = -HUGE_VAL;
+            lD4R.maxAngleR = -HUGE_VAL;
+            lD4R.minDistT = HUGE_VAL;
+            lD4R.minAngleT = HUGE_VAL;
+            // newTarget = loadTargetCoord();
+            newTarget.fi= calcAngle(x,y,newTarget.x,newTarget.y);
+            angleDistFormating();
+           // lD4R.minDist = copyOfLaserData.Data[k].scanDistance; //dufam ze v mm
+           // lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
         }
+          ///mindistT -> najblizsi bod nejblizsia stena ktoru potom sledujem
+          if (copyOfLaserData.Data[k].scanDistance < lD4R.minDistT && copyOfLaserData.Data[k].scanDistance < 1500.0 ){
+               lD4R.minDistT = copyOfLaserData.Data[k].scanDistance;
+               lD4R.minAngleT = copyOfLaserData.Data[k].scanAngle;
+          }
 
+          /// formatovanie uhla a detekcia prekazky vzhladom na newTarget z pozicie robota
+          angleDiff = (fip - newTarget.fi)*180/M_PI;
+          if (angleDiff < 0) angleDiff = 360 + angleDiff;
+
+           ///zistujem prekazku na uhle voci bodu
+          if ((copyOfLaserData.Data[k].scanDistance < lD4R.minDist && copyOfLaserData.Data[k].scanDistance < 1000.0) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) < fmod(angleDiff + 2.0,360.0) ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) > fmod(angleDiff - 2.0,360.0) )){ //+90
+               lD4R.minDist = copyOfLaserData.Data[k].scanDistance;
+               lD4R.minAngle = copyOfLaserData.Data[k].scanAngle;
+          }
+           ///zistenie prekazky pre distcritL
+          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistL && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -15.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff - 16.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritL)){ // +90
+               lD4R.DistL = copyOfLaserData.Data[k].scanDistance;
+               lD4R.AngleL = copyOfLaserData.Data[k].scanAngle;
+          }
+           ///zistenie prekazky pre distcritR
+          if(copyOfLaserData.Data[k].scanDistance < lD4R.DistR && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +16.0,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff + 15.0,360.0)) && (copyOfLaserData.Data[k].scanDistance <= lD4R.DcritR)){ //+90
+               lD4R.DistR = copyOfLaserData.Data[k].scanDistance;
+               lD4R.AngleR = copyOfLaserData.Data[k].scanAngle;
+          }
+
+          ///max dist Left
+         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistL && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff -1.0 ,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff -55.0 ,360.0))){
+               lD4R.maxDistL = copyOfLaserData.Data[k].scanDistance;
+               lD4R.maxAngleL = copyOfLaserData.Data[k].scanAngle;
+          }
+         ///max dist Right
+         if ((copyOfLaserData.Data[k].scanDistance > lD4R.maxDistR && copyOfLaserData.Data[k].scanDistance < 2000.0 ) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) <= fmod(angleDiff +35,360.0)) && ((360.0 - fmod(copyOfLaserData.Data[k].scanAngle,360.0)) >= fmod(angleDiff +1.0,360.0))){
+              lD4R.maxDistR = copyOfLaserData.Data[k].scanDistance;
+              lD4R.maxAngleR = copyOfLaserData.Data[k].scanAngle;
+          }
+         mutex.unlock();
     }
 
-    if(navigationState && wallFollowState && !startState){
-        if (!changedTargetState){
-            newTarget = setPoint(lD4R.minXT,lD4R.minYT);
-            changedTargetState = TRUE;
-        }else{
-            wallFollowing();
-            goToTarget();
-            changedTargetState = FALSE;
-        }
-    }
+    /// vypocet svetovych suradnic bodu minDistT
+    if(!isinf(lD4R.minDistT) && !isinf(lD4R.minAngleT)){
+        lD4R.forminAngleT = fmod((lD4R.minAngleT*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+        lD4R.minXT = x + ((lD4R.minDistT/1000.0)*cos(lD4R.forminAngleT));
+        lD4R.minYT = y + ((lD4R.minDistT/1000.0)*sin(lD4R.forminAngleT));
+        lD4R.minPointT = TRUE;
+    }else lD4R.minPointT = FALSE;
 
-    if(navigationState && twoPoitDistance(x,y,finalTarget.x,finalTarget.y) > shortestDistance && !startState &&  !changedTargetState){
-            wallFollowState = TRUE;
-            wallDetectionState = FALSE;
-    }else{
-            wallFollowState = FALSE;
-            wallDetectionState = TRUE;
-    }
+    /// vypocet svetovych suradnic bodu minDist
+    if(!isinf(lD4R.minDist) && !isinf(lD4R.minAngle)){
+        lD4R.forminAngle = fmod((lD4R.minAngle*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+        lD4R.minX = x + ((lD4R.minDist/1000.0)*cos(lD4R.forminAngle));
+        lD4R.minY = y + ((lD4R.minDist/1000.0)*sin(lD4R.forminAngle));
+        lD4R.minPoint = TRUE;
+    }else lD4R.minPoint = FALSE;
 
+    /// vypocet svetovych suradnic bodu DistL
+    if(!isinf(lD4R.DistL) && !isinf(lD4R.AngleL)){
+        lD4R.formAngleL = fmod((lD4R.AngleL*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+        lD4R.XL = x + ((lD4R.DistL/1000.0)*cos(lD4R.formAngleL));
+        lD4R.YL = y + ((lD4R.DistL/1000.0)*sin(lD4R.formAngleL));
+        lD4R.minPointL = TRUE;
+    }else lD4R.minPointL = FALSE;
 
+    /// vypocet svetovych suradnic bodu DistR
+    if(!isinf(lD4R.DistR) && !isinf(lD4R.AngleR)){
+        lD4R.formAngleR = fmod((lD4R.AngleR*M_PI/180) + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+        lD4R.XR = x + ((lD4R.DistR/1000.0)*cos(lD4R.formAngleR));
+        lD4R.YR = y + ((lD4R.DistR/1000.0)*sin(lD4R.formAngleR));
+        lD4R.minPointR = TRUE;
+    }else lD4R.minPointR = FALSE;
 
+    /// vypocet svetovych suradnic bodu maxL (kraj steny lavy)
+    if(!isinf(lD4R.maxDistL) && !isinf(lD4R.maxAngleL)){
+        lD4R.formAngleL = fmod(lD4R.maxAngleL /180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+        lD4R.maxXL = x + ((lD4R.maxDistL/1000.0)*cos(lD4R.formAngleL));
+        lD4R.maxYL = y + ((lD4R.maxDistL/1000.0)*sin(lD4R.formAngleL));
+        lD4R.maxPointL = TRUE;
+    }else lD4R.maxPointL = FALSE;
+
+    /// vypocet svetovych suradnic bodu maxR (kraj steny pravy)
+    if(!isinf(lD4R.maxAngleR) && !isinf(lD4R.maxDistR)){
+        lD4R.formAngleR = fmod(lD4R.maxAngleR/180.0*M_PI + fip,(2.0*M_PI));  // uhol zvierany s x,y suradnicou robota vo svete
+        lD4R.maxXR = x + ((lD4R.maxDistR/1000.0)*cos(lD4R.formAngleR));
+        lD4R.maxYR = y + ((lD4R.maxDistR/1000.0)*sin(lD4R.formAngleR));
+        lD4R.maxPointR = TRUE;
+    }else lD4R.maxPointR = FALSE;
 }
 
-void MainWindow::wallDetection(){
+void MainWindow::navigation(){
+    /// nacitat finalTarget >> done
+    /// nastavit newTarget = Final target >> done
+    /// nastavit vzdialenost start ciel ak vychodiskovu >> done - zmena bude HUGE VAL a po prvom cykle sa zmeni
+    /// rovno prejst do DetectionState -> ak sa nachadza prekazka medzi startom a cielom pokusi sa obist
+    ///     ak sa pocas obchadzania prekazky vzdiali od bodu dalej ako vychodiskova vzdialenost  tak sleduje stenu
+    /// v podstate prva vec ktora sa vykona tu sa rozhodne ci budem sledovat stenu  alebo obchadzam prekazku
+
+    if(navigationState){
+
+        if (!firsttime){
+            finalTarget = loadTargetCoord();
+            newTarget = finalTarget;
+            navigateData.minDist2Fintarget = HUGE_VAL;
+            wallDetectionState = TRUE; wallFollowState = FALSE;
+            cout << "final target:   " << finalTarget.x << "   " << finalTarget.y <<  endl;
+            firsttime = TRUE;
+        }
+       // cout << newTarget.x << "    " << newTarget.y << endl;
+
+        /// ak som vzdialeny od ciela viac ako posledna zaznamenana vychodiskova hodnota premnem sa do rezimu wall follow
+        /// ak sa priblizim pomocou sledovanie steny opat sa snazim obchadzat prekazky
+        /// deje sa len ak sa nepohybujem -> startstae = 0
+        if(twoPoitDistance(x,y,finalTarget.x,finalTarget.y) > navigateData.minDist2Fintarget && !startState){
+                wallFollowState = TRUE;
+                wallDetectionState = FALSE;
+
+        }else{
+                wallFollowState = FALSE;
+                wallDetectionState = TRUE;
+        }
+        ///wall detection
+        /// pozriem sa na ciel , ak je prekazka obchadzaj ju  inak chod na ciel
+        /// obchadzam prekazku -> wallDetection -> najde kraj prekazky, vyrata euklidovsku vzdialenost,navstavi novy target ako bezpecny bod,
+        ///                    -> idem na novy target
+        if(wallDetectionState && !wallFollowState && !startState){
+            newTarget = finalTarget;
+            updateLidarData();
+            if(isPathBlocked()){
+                  worldPoint tmpPoint = wallDetection();
+                  if(tmpPoint.dist != 123456) {
+                      navigateData.minDist2Fintarget = tmpPoint.dist;
+                      newTarget = tmpPoint;
+                      startState = TRUE;
+                  }else cout << "cannot find edge" <<endl;
+
+            }else{
+                startState = TRUE;
+                navigationState = FALSE;
+            }
+        }
+        /// wall folloowing
+        /// najdi stenu  ->  najblizsi bod
+        /// najdi jej kraje -> wallfollowing
+        /// pohybuj sa v smere jej krajneho bodu -> zvoleny L
+        if(!wallDetectionState && wallFollowState && !startState){
+
+            newTarget = finalTarget;
+            updateLidarData();
+            if(lD4R.minPointT){
+                worldPoint tmpPoint = wallFollowing();
+                if(tmpPoint.dist != 123456){
+                    newTarget = tmpPoint;
+                    startState = TRUE;
+                } else cout << "cannot find edge" << endl;
+
+            }else cout << "neviem najst stenu" << endl;
+        }
+    }
+}
+
+worldPoint MainWindow::wallDetection(){
     ///1. ak som zadal ciel vykonaj sa
     ///2. pozri sa ci je prekazka keby sa robot natoci na uhol zvierany s cielom
     ///3. ak je prekazka skontroluj kraje/konce a vyrataj euklidovsku vzdialenost s cielom cez tieto body
@@ -892,7 +1018,10 @@ void MainWindow::wallDetection(){
 
         /// dva body, pre kazdy vyratat secure suradnice -> funkcia findSecurePoint
         worldPoint leftsecurePoint,rightsecurePoint;
+        worldPoint errpoint;
+        errpoint.dist = 123456;
 
+        /// secure points + euklid dist
         if(lD4R.maxPointL){
           leftsecurePoint = findSecurePoint(lD4R.maxXL,lD4R.maxYL);
           leftsecurePoint.dist = twoPoitDistance(x,y,leftsecurePoint.x,leftsecurePoint.y) + twoPoitDistance(leftsecurePoint.x,leftsecurePoint.y,finalTarget.x,finalTarget.y);
@@ -901,32 +1030,28 @@ void MainWindow::wallDetection(){
           rightsecurePoint = findSecurePoint(lD4R.maxXR,lD4R.maxYR);
           rightsecurePoint.dist = twoPoitDistance(x,y,rightsecurePoint.x,rightsecurePoint.y) + twoPoitDistance(rightsecurePoint.x,rightsecurePoint.y,finalTarget.x,finalTarget.y);
         }
-        ///vyratat euklidovsku vzdialenost pre (krajne body + bezpecna vzdialenost)
+
         if(lD4R.maxPointL){
-           if(lD4R.maxPointR){
-               if(leftsecurePoint.dist > rightsecurePoint.dist) newTarget = rightsecurePoint;
-               else newTarget = leftsecurePoint;
-           }else newTarget = leftsecurePoint;
-        }else if(lD4R.maxPointR) newTarget = rightsecurePoint;
-               else {
-                        cout << " cannot find edge point and giving up" << endl;
-                        navigationState = FALSE;
-                    }
+               if(lD4R.maxPointR){
+                   if(leftsecurePoint.dist > rightsecurePoint.dist) return rightsecurePoint;
+                            else return leftsecurePoint;
+               }
+               else return leftsecurePoint;
+         }else{
+            if(lD4R.maxPointR) return rightsecurePoint;
+                else return errpoint;
+            }
     }
 
-void MainWindow::wallFollowing(){
+worldPoint MainWindow::wallFollowing(){
     worldPoint leftsecurePoint;
+    worldPoint errPoint;
+    errPoint.dist = 123456;
 
-
-    if(lD4R.maxPointL) leftsecurePoint = findSecurePoint(lD4R.maxXL,lD4R.maxYL);
-
-    if(lD4R.maxPointL) newTarget = leftsecurePoint;
-    else {
-        cout << " cannot find edge point and giving up" << endl;
-        navigationState = FALSE;
-    }
-
-
+    if(lD4R.maxPointL) {
+        leftsecurePoint = findSecurePoint(lD4R.maxXL,lD4R.maxYL);
+        return leftsecurePoint;
+     } else return errPoint;
 }
 
 double MainWindow::angleFormating(double fi){
@@ -1001,13 +1126,11 @@ void MainWindow::processThisRobot()
     mapNavigate();
     angleDistFormating();
 
-
-
     cout<< "targetx:  " << newTarget.x << "  targety:  " << newTarget.y << endl;
     cout<< "targetfi:  " << newTarget.fi*180/M_PI << "  aglerr:  " << angleErr*180/M_PI << "  targetDist:  " <<newTarget.dist << endl;
     cout<< "x:  " << x << "  y:  "<< y << "  fi:  " << fi*180/M_PI <<  "  fip:  "  <<  fip*180/M_PI <<endl;
     cout<< "startState:  " << startState << "  rotateState:  " << rotateState << "  mapNavState:  " << mapNavigateState << endl;
-
+    cout<< "navState:  " << navigationState << "  wallDetectState:  " << wallDetectionState << "  wallFollowinState:  " << wallFollowState << endl;
    if(mapResetState) {
       mapData =  createMap(mapData);
        cout << "mapa nulovana!" << endl;
@@ -1129,10 +1252,8 @@ void MainWindow::on_pushButton_13_clicked() // mapNavigate
 
 void MainWindow::on_pushButton_12_clicked() // navigate
 {
-    finalTarget = loadTargetCoord();
-    startState = FALSE;
     navigationState = TRUE;
-
+    firsttime = FALSE;
 }
 
 void MainWindow::on_pushButton_11_clicked() //stop stop
