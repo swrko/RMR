@@ -11,15 +11,17 @@ public:
     ~Signal(){}
  //   Signal(const Signal &){};
 
-    double startR;
-    double startL;
-    double encL;
-    double encR;
-    double tmpPencL;
-    double tmpPencR;
+    double fintargx;
+    double fintargy;
+    double walldet;
+    double wallfolow;
+    double navstate;
+    double startstate;
     double robotFi;
     double distx;
     double disty;
+    double firstime;
+    double go2finTarg;
 
 };
 Q_DECLARE_METATYPE(Signal)

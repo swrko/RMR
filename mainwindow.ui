@@ -278,7 +278,7 @@
       </item>
      </layout>
     </item>
-    <item row="5" column="1">
+    <item row="6" column="1">
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="2" column="1">
        <widget class="QLineEdit" name="lineEdit_7"/>
@@ -342,7 +342,7 @@
       <item row="4" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>encoder L</string>
+         <string>wallDetec</string>
         </property>
        </widget>
       </item>
@@ -368,14 +368,14 @@
       <item row="5" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>encoder R</string>
+         <string>wallFollow</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>startL</string>
+         <string>startState</string>
         </property>
        </widget>
       </item>
@@ -385,21 +385,21 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>startR</string>
+         <string>navigation</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
-         <string>pencR</string>
+         <string>finTarg  y:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>pencL</string>
+         <string>finTarg  x:</string>
         </property>
        </widget>
       </item>
@@ -431,6 +431,54 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout"/>
+    </item>
+    <item row="6" column="0">
+     <widget class="QFrame" name="frame_2">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QWidget" name="formLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>339</x>
+         <y>0</y>
+         <width>261</width>
+         <height>271</height>
+        </rect>
+       </property>
+       <layout class="QFormLayout" name="formLayout_2">
+        <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_4"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>first time: </string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>go2finTarg</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="lineEdit_13"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="lineEdit_14"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

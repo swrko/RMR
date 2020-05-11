@@ -145,7 +145,8 @@ public:
     worldPoint loadTargetCoord();
     worldPoint setPoint(double x, double y);
     MapPoint setPoint(int x,int y,int value);
-    worldPoint findSecurePoint(double edgePointX, double edgePointY);
+    worldPoint findSecurePointL(double edgePointX, double edgePointY);
+    worldPoint findSecurePointR(double edgePointX, double edgePointY);
 
     double twoPoitDistance(double x1, double y1, double x2, double y2);
     double calcAngle(double x1, double y1, double x2, double y2);
@@ -244,6 +245,7 @@ private:
      bool mapingState = FALSE;
      bool mapResetState = FALSE;
      bool firsttime = FALSE;
+     bool go2finState = FALSE;
      double shortestDistance = 0.0;
      double desiredAngle = 0.0;
      double desiredDistance = 0.0;

@@ -16,6 +16,7 @@
 #include <QtGui/QFormLayout>
 #include <QtGui/QFrame>
 #include <QtGui/QGridLayout>
+#include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QLabel>
 #include <QtGui/QLineEdit>
@@ -80,6 +81,15 @@ public:
     QLineEdit *lineEdit_9;
     QLineEdit *lineEdit_10;
     QFrame *frame;
+    QHBoxLayout *horizontalLayout;
+    QFrame *frame_2;
+    QWidget *formLayoutWidget;
+    QFormLayout *formLayout_2;
+    QGridLayout *gridLayout_4;
+    QLabel *label_12;
+    QLabel *label_13;
+    QLineEdit *lineEdit_13;
+    QLineEdit *lineEdit_14;
     QStatusBar *statusBar;
     QMenuBar *menuBar;
 
@@ -364,7 +374,7 @@ public:
         gridLayout_3->addWidget(lineEdit_10, 0, 1, 1, 1);
 
 
-        gridLayout->addLayout(gridLayout_3, 5, 1, 1, 1);
+        gridLayout->addLayout(gridLayout_3, 6, 1, 1, 1);
 
         frame = new QFrame(centralWidget);
         frame->setObjectName(QString::fromUtf8("frame"));
@@ -378,6 +388,53 @@ public:
         frame->setFrameShadow(QFrame::Raised);
 
         gridLayout->addWidget(frame, 2, 0, 1, 1);
+
+        horizontalLayout = new QHBoxLayout();
+        horizontalLayout->setSpacing(6);
+        horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
+
+        gridLayout->addLayout(horizontalLayout, 5, 0, 1, 1);
+
+        frame_2 = new QFrame(centralWidget);
+        frame_2->setObjectName(QString::fromUtf8("frame_2"));
+        frame_2->setFrameShape(QFrame::StyledPanel);
+        frame_2->setFrameShadow(QFrame::Raised);
+        formLayoutWidget = new QWidget(frame_2);
+        formLayoutWidget->setObjectName(QString::fromUtf8("formLayoutWidget"));
+        formLayoutWidget->setGeometry(QRect(339, 0, 261, 271));
+        formLayout_2 = new QFormLayout(formLayoutWidget);
+        formLayout_2->setSpacing(6);
+        formLayout_2->setContentsMargins(11, 11, 11, 11);
+        formLayout_2->setObjectName(QString::fromUtf8("formLayout_2"));
+        formLayout_2->setContentsMargins(0, 0, 0, 0);
+        gridLayout_4 = new QGridLayout();
+        gridLayout_4->setSpacing(6);
+        gridLayout_4->setObjectName(QString::fromUtf8("gridLayout_4"));
+
+        formLayout_2->setLayout(0, QFormLayout::LabelRole, gridLayout_4);
+
+        label_12 = new QLabel(formLayoutWidget);
+        label_12->setObjectName(QString::fromUtf8("label_12"));
+
+        formLayout_2->setWidget(1, QFormLayout::LabelRole, label_12);
+
+        label_13 = new QLabel(formLayoutWidget);
+        label_13->setObjectName(QString::fromUtf8("label_13"));
+
+        formLayout_2->setWidget(2, QFormLayout::LabelRole, label_13);
+
+        lineEdit_13 = new QLineEdit(formLayoutWidget);
+        lineEdit_13->setObjectName(QString::fromUtf8("lineEdit_13"));
+
+        formLayout_2->setWidget(1, QFormLayout::FieldRole, lineEdit_13);
+
+        lineEdit_14 = new QLineEdit(formLayoutWidget);
+        lineEdit_14->setObjectName(QString::fromUtf8("lineEdit_14"));
+
+        formLayout_2->setWidget(2, QFormLayout::FieldRole, lineEdit_14);
+
+
+        gridLayout->addWidget(frame_2, 6, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralWidget);
         statusBar = new QStatusBar(MainWindow);
@@ -419,12 +476,14 @@ public:
         label->setText(QApplication::translate("MainWindow", "X:", 0, QApplication::UnicodeUTF8));
         label_3->setText(QApplication::translate("MainWindow", "Rot:", 0, QApplication::UnicodeUTF8));
         label_2->setText(QApplication::translate("MainWindow", "Y:", 0, QApplication::UnicodeUTF8));
-        label_4->setText(QApplication::translate("MainWindow", "encoder L", 0, QApplication::UnicodeUTF8));
-        label_5->setText(QApplication::translate("MainWindow", "encoder R", 0, QApplication::UnicodeUTF8));
-        label_6->setText(QApplication::translate("MainWindow", "startL", 0, QApplication::UnicodeUTF8));
-        label_7->setText(QApplication::translate("MainWindow", "startR", 0, QApplication::UnicodeUTF8));
-        label_9->setText(QApplication::translate("MainWindow", "pencR", 0, QApplication::UnicodeUTF8));
-        label_8->setText(QApplication::translate("MainWindow", "pencL", 0, QApplication::UnicodeUTF8));
+        label_4->setText(QApplication::translate("MainWindow", "wallDetec", 0, QApplication::UnicodeUTF8));
+        label_5->setText(QApplication::translate("MainWindow", "wallFollow", 0, QApplication::UnicodeUTF8));
+        label_6->setText(QApplication::translate("MainWindow", "startState", 0, QApplication::UnicodeUTF8));
+        label_7->setText(QApplication::translate("MainWindow", "navigation", 0, QApplication::UnicodeUTF8));
+        label_9->setText(QApplication::translate("MainWindow", "finTarg  y:", 0, QApplication::UnicodeUTF8));
+        label_8->setText(QApplication::translate("MainWindow", "finTarg  x:", 0, QApplication::UnicodeUTF8));
+        label_12->setText(QApplication::translate("MainWindow", "first time: ", 0, QApplication::UnicodeUTF8));
+        label_13->setText(QApplication::translate("MainWindow", "go2finTarg", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };
