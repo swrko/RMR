@@ -12,7 +12,6 @@
 
 <br>
 <br>
-<br>
 
 ### Úloha č.1. Lokalizácia  a polohovanie robota v prostredí
 
