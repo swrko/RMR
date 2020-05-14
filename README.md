@@ -1,17 +1,17 @@
 ###		SLOVENSKÁ TECHNICKÁ UNIVERZITA V BRATISLAVE FAKULTA ELEKTROTECHNIKY A INFORMATIKY
 
-## 										Dokumentácia
+			# Dokumentácia
  
 
-## 									Riadenie Mobilných Robotov
+			# Riadenie Mobilných Robotov
 
 
 
 
 
 
-**Letný semester 2019/2020 						Filip Zúbek**
-**												Adam Gavula**
+**Letný semester 2019/2020 **
+**Vypracoval: 		Filip Zúbek, Adam Gavula**
 
 
 
