@@ -1,15 +1,15 @@
-###		SLOVENSKÁ TECHNICKÁ UNIVERZITA V BRATISLAVE FAKULTA ELEKTROTECHNIKY A INFORMATIKY
+#	SLOVENSKÁ TECHNICKÁ UNIVERZITA V BRATISLAVE FAKULTA ELEKTROTECHNIKY A INFORMATIKY
 	
-# &nbsp;&nbsp;&nbsp; Dokcumentacia 
+### &nbsp;&nbsp;&nbsp;&nbsp; Dokcumentacia 
 
-			# Riadenie Mobilných Robotov
-
-
+### &nbsp;&nbsp;&nbsp; Riadenie Mobilných Robotov
 
 
 
 
-**Letný semester 2019/2020**
+
+
+**Letný semester 2019/2020**<br>
 **Vypracoval: 		Filip Zúbek, Adam Gavula**
 
 
