@@ -3,14 +3,17 @@
 ## Dokcumentacia 
 
 ## Riadenie Mobilných Robotov
+
 <br>
-<br>
-<br>
+
+
 **Letný semester 2019/2020**<br>
 **Vypracoval: 		Filip Zúbek, Adam Gavula**
+
 <br>
 <br>
 <br>
+
 ### Úloha č.1. Lokalizácia  a polohovanie robota v prostredí
 
 Lokalizáciu mobilného robota typu Kobuki sme vykonali pomocou odometrie. Za týmto účelom bolo potrebné správne spracovať získané dáta z enkodérov a teda ošetriť pretekanie premenných. Z týchto dát  a informácii o robote sme vypočítali prejdenú vzdialenosť a uhol natočenia robota voči počiatočnej polohe robota v priestore (x,y  → 0,0). Pomocou vzťahov uvedených v zadaní pre odometriu sme z prejdenej vzdialenosti a uhla natočenia určili polohu robota X a Y v prostredí v ktorom sa robot nachádza. Pre lokalizáciu robota sme uvažovali dva prípady výpočtu polohy robota: 
