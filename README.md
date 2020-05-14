@@ -1,8 +1,8 @@
 #	SLOVENSKÁ TECHNICKÁ UNIVERZITA V BRATISLAVE FAKULTA ELEKTROTECHNIKY A INFORMATIKY
 	
-## &nbsp;&nbsp;&nbsp;&nbsp; Dokcumentacia 
+## &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Dokcumentacia 
 
-## &nbsp;&nbsp;&nbsp; Riadenie Mobilných Robotov
+## &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Riadenie Mobilných Robotov
 <br>
 <br>
 <br>
